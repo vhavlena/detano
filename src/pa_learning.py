@@ -26,23 +26,46 @@ import math
 
 import learning.fpt as fpt
 import learning.alergia as alergia
-import parser.conversation_parser as con_par
+import parser.IEC104_parser as con_par
 
 rows_filter = ["asduType", "cot"]
 TRAINING = 0.33
 
+
+"""
+Abstraction on messages
+"""
+def abstraction(item):
+    return tuple([item[k] for k in rows_filter])
+
+
+
+"""
+Print help message
+"""
+def print_help():
+    print("./pa_learning <csv file>")
+
+
+"""
+Main
+"""
 def main():
     argc = len(sys.argv)
     if argc < 2:
-        sys.stderr.write("Bad parameters\n")
+        sys.stderr.write("Error: bad parameters\n")
+        print_help()
         sys.exit(1)
 
     csv_file = sys.argv[1]
     csv_fd = open(csv_file, "r")
     csv_file = os.path.basename(csv_file)
 
-    reader = csv.DictReader(csv_fd, delimiter=";")
-    lines = con_par.filter_to_conversations(reader, rows_filter)
+    normal_msgs = con_par.get_messages(csv_fd)
+    parser = con_par.IEC104Parser(normal_msgs)
+    parser.parse_conversations()
+    lines = parser.get_all_conversations(abstraction)
+
     index = int(len(lines)*TRAINING)
     training, testing = lines[:index], lines[index:]
 

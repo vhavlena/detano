@@ -32,7 +32,7 @@ from enum import Enum
 
 import learning.fpt as fpt
 import learning.alergia as alergia
-import parser.conversation_parser as con_par
+import parser.IEC104_parser as con_par
 import detection.member as mem
 
 rows_filter_normal = ["asduType", "cot"]
@@ -44,17 +44,6 @@ Program parameters
 class Params(Enum):
     PA = 0
     PTA = 1
-
-
-"""
-Get all messages from a csv file
-"""
-def get_messages(fd):
-    reader = csv.DictReader(fd, delimiter=";")
-    ret = []
-    for item in reader:
-        ret.append(item)
-    return ret
 
 
 """
@@ -109,12 +98,25 @@ def learn_golden(parser, learn_proc):
 
 
 """
+Print help message
+"""
+def print_help():
+    print("Anomaly detection based on membership test")
+    print()
+    print("./anomaly_member <opt> <valid traffic csv> <anomaly csv>")
+    print("<opt> is one of the following:")
+    print("  --pa detection based on PAs")
+    print("  --pta detection based on PTAs")
+
+
+"""
 Distribution-comparison-based anomaly detection
 """
 def main():
     argc = len(sys.argv)
     if argc < 4:
-        sys.stderr.write("Bad parameters\n")
+        sys.stderr.write("Error: bad parameters\n")
+        print_help()
         sys.exit(1)
 
     alg = Params.PA
@@ -128,14 +130,14 @@ def main():
 
     normal_file = sys.argv[2]
     normal_fd = open(normal_file, "r")
-    normal_msgs = get_messages(normal_fd)
+    normal_msgs = con_par.get_messages(normal_fd)
 
     test_file = sys.argv[3]
     test_fd = open(test_file, "r")
     test_msgs = get_messages(test_fd)
 
-    normal_parser = con_par.ConvParser(normal_msgs)
-    test_parser = con_par.ConvParser(test_msgs)
+    normal_parser = con_par.IEC104Parser(normal_msgs)
+    test_parser = con_par.IEC104Parser(test_msgs)
 
     golden_map = learn_golden(normal_parser, learn_proc)
     anom = mem.AnomMember(golden_map, learn_proc)

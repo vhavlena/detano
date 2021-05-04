@@ -34,7 +34,7 @@ import learning.alergia as alergia
 import parser.core_parser as core_parser
 import parser.wfa_parser as wfa_parser
 import wfa.core_wfa_export as core_wfa_export
-import parser.conversation_parser as con_par
+import parser.IEC104_parser as con_par
 
 import wfa.aux_functions as aux
 
@@ -49,10 +49,28 @@ def create_fpt(ln, ren_dict):
     return tree
 
 
+"""
+Abstraction on messages
+"""
+def abstraction(item):
+    return tuple([item[k] for k in rows_filter])
+
+
+"""
+Print help message
+"""
+def print_help():
+    print("./pta_learning <csv file>")
+
+
+"""
+Main
+"""
 def main():
     argc = len(sys.argv)
     if argc < 2:
-        sys.stderr.write("Bad parameters\n")
+        sys.stderr.write("Error: bad parameters\n")
+        print_help()
         sys.exit(1)
 
     csv_file = sys.argv[1]
@@ -62,8 +80,11 @@ def main():
     ############################################################################
     # Preparing the learning data
     ############################################################################
-    reader = csv.DictReader(csv_fd, delimiter=";")
-    lines = con_par.filter_to_conversations(reader, rows_filter)
+    normal_msgs = con_par.get_messages(csv_fd)
+    parser = con_par.IEC104Parser(normal_msgs)
+    parser.parse_conversations()
+    lines = parser.get_all_conversations(abstraction)
+
     ren_dict = con_par.values_bidict(lines)
     index = int(len(lines)*TRAINING)
     training, testing = lines[:index], lines[index:]

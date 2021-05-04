@@ -24,6 +24,8 @@ import csv
 import time
 import bidict
 
+import parser.conversation_parser_base as par
+
 from typing import List, NamedTuple
 from collections import defaultdict
 from enum import Enum
@@ -37,13 +39,13 @@ class ConvType(Enum):
     UNKNOWN = 99
 
 
-class ConvParser:
+class IEC104Parser(par.ConvParserBase):
 
     """
     Takes a list of messages (each message is a dictionary)
     """
     def __init__(self, inp, pr=None):
-        self.input = list(filter(ConvParser.is_inform_message, inp))
+        self.input = list(filter(IEC104Parser.is_inform_message, inp))
         self.compair = pr
         self.index = 0
         self.buffer = []
@@ -176,20 +178,20 @@ class ConvParser:
 
         try:
             row = self.get_symbol(buff_read)
-            if ConvParser.is_spontaneous(row):
+            if IEC104Parser.is_spontaneous(row):
                 return [row]
 
             final = False
-            tp = ConvParser.get_initial_type(row)
+            tp = IEC104Parser.get_initial_type(row)
 
             while True:
-                if ConvParser.is_spontaneous(row):
+                if IEC104Parser.is_spontaneous(row):
                     buff.append(row)
                     row = self.get_symbol(buff_read)
                     continue
-                if ConvParser.in_middle_range(row, tp):
+                if IEC104Parser.in_middle_range(row, tp):
                     final = True
-                if final and (not ConvParser.in_middle_range(row, tp)):
+                if final and (not IEC104Parser.in_middle_range(row, tp)):
                     self.return_symbol(row, buff_read)
                     break
                 conv.append(row)
@@ -215,7 +217,7 @@ class ConvParser:
             dct_spl[id].append(item)
         ret = []
         for k, v in dct_spl.items():
-            ret.append(ConvParser(v, k))
+            ret.append(IEC104Parser(v, k))
         return ret
 
 
@@ -232,7 +234,7 @@ class ConvParser:
         m = max(list(chunks.keys()))
         ret = []
         for i in range(m):
-            ret.append(ConvParser(chunks[i], self.compair))
+            ret.append(IEC104Parser(chunks[i], self.compair))
         return ret
 
 
@@ -249,28 +251,15 @@ def filter_to_conversations(reader, rows_filter):
     return lines
 
 
-# def filter_to_conversations_match(reader, rows_filter, match):
-#     lines = list()
-#     conversation = list()
-#     for row in reader:
-#         item = tuple([row[k] for k in rows_filter])
-#         if not all(item):
-#             if len(conversation) > 0:
-#                 lines.append(conversation)
-#                 conversation = list()
-#         else:
-#             for m in match:
-#                 cnt = True
-#                 for k, v in m.items():
-#                     if row[k] != v:
-#                         cnt = False
-#                         break
-#                 if cnt:
-#                     break
-#             if not cnt:
-#                 continue
-#             conversation.append(item)
-#     return lines
+"""
+Get all messages from a csv file
+"""
+def get_messages(fd):
+    reader = csv.DictReader(fd, delimiter=";")
+    ret = []
+    for item in reader:
+        ret.append(item)
+    return ret
 
 
 def values_bidict(vals):

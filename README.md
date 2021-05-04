@@ -1,4 +1,4 @@
-# Detection of Network Anomalies
+# Automata-based Detection of Network Anomalies
 
 To run the tools you need to have installed Python 3 with the following packages
 - bidict
@@ -14,20 +14,38 @@ These packages you can install using the `pip3` util.
 PAs are specified using a format, which given as follows.
 ```
 <initial state>
-<source state> <destination state> <symbol in dec> <probability>)*
+(<source state> <destination state> <symbol> <probability>)*
 (<final state> <probability>)*
 ```
 
 ### Tool Support
 
-*Conversations* are assumed to be provided as a csv file (each line is a single message) where conversations are divided by an empty line (line with all fields empty). A csv file containing such divided conversations is used as an input of the tools below.
+All tools in the suite works with automata obtained from a list of messages
+(packets) divided into *conversations* (messages that logically belong
+together). Messages (packets) are assumed to be provided in a csv file (each
+message per line). Files containing message are then input of the tools below.
+Messages are splitted into conversations based on a particular protocol (an
+incomplete parser for IEC 104 is provided).
+
 
 Tools are located in the directory `src`.
-- `anomaly_detector.py` Tool for a detection of anomalies in a csv file based on a given probabilistic automaton. The detection mechanism cheks whether conversations provided in a csv file all belongs to language of a given PA (i.e., each conversation has nonzero probability).
-- `conv_splitter.py` Tool for a splitting of a csv file into conversations (stored as described above).
-- `pa_learning.py` Learning of PAs based on own implementation of Alergia (including the testing phase). As an input it takes a csv file containing conversations.
-- `pta_learning.py` Learning of PAs based on prefix trees (including the testing phase). As an input it takes a csv file containing conversations.
-- `euclid_distance.py` Computation of Euclid distance of two deterministic probabilistic automata. Used for a comparison of a PA representing a valid traffic with a PA representing a traffic under inspection.
+- `anomaly_member.py` Tool for a detection of anomalies in a csv file (testing
+  file) based on a given valid traffic sample (training file). Based on the
+  particular method, a PA/PTA is first obtained from training file. The
+  detection mechanism then checks whether conversations from testing file
+  (divided into time windows) all belongs to language of the learned PA/PTA
+  (i.e., each conversation has nonzero probability).
+- `anomaly_distr.py` Tool for a detection of anomalies in a csv file (testing
+  file) based on a given valid traffic sample (training file). Based on the
+  particular method, a PA/PTA is first obtained from training file. The
+  detection mechanism then checks whether, for each time window from the testing
+  file, the Euclid distance of a PA/PTA obtained from that window with the
+  PA/PTA obtained from the training file is below a threshold.
+- `pa_learning.py` Learning of PAs based on own implementation of Alergia
+  (including the testing phase). As an input it takes a csv file containing
+  messages.
+- `pta_learning.py` Learning of PAs based on prefix trees--PTAs (including the
+  testing phase). As an input it takes a csv file containing messages.
 
 ### Structure of the Repository
 

@@ -36,7 +36,7 @@ import parser.core_parser as core_parser
 import parser.wfa_parser as wfa_parser
 import wfa.core_wfa_export as core_wfa_export
 import wfa.matrix_wfa as matrix_wfa
-import parser.conversation_parser as con_par
+import parser.IEC104_parser as con_par
 import detection.distr_comparison as distr
 
 SPARSE = False
@@ -50,17 +50,6 @@ Program parameters
 class Params(Enum):
     PA = 0
     PTA = 1
-
-
-"""
-Get all messages from a csv file
-"""
-def get_messages(fd):
-    reader = csv.DictReader(fd, delimiter=";")
-    ret = []
-    for item in reader:
-        ret.append(item)
-    return ret
 
 
 """
@@ -115,12 +104,25 @@ def learn_golden(parser, learn_proc):
 
 
 """
+Print help message
+"""
+def print_help():
+    print("Anomaly detection based on distribution comparison")
+    print()
+    print("./anomaly_distr <opt> <valid traffic csv> <anomaly csv>")
+    print("<opt> is one of the following:")
+    print("  --pa detection based on PAs")
+    print("  --pta detection based on PTAs")
+
+
+"""
 Distribution-comparison-based anomaly detection
 """
 def main():
     argc = len(sys.argv)
     if argc < 4:
-        sys.stderr.write("Bad parameters\n")
+        sys.stderr.write("Error: bad parameters\n")
+        print_help()
         sys.exit(1)
 
     alg = Params.PA
@@ -138,10 +140,10 @@ def main():
 
     test_file = sys.argv[3]
     test_fd = open(test_file, "r")
-    test_msgs = get_messages(test_fd)
+    test_msgs = con_par.get_messages(test_fd)
 
-    normal_parser = con_par.ConvParser(normal_msgs)
-    test_parser = con_par.ConvParser(test_msgs)
+    normal_parser = con_par.IEC104Parser(normal_msgs)
+    test_parser = con_par.IEC104Parser(test_msgs)
 
     golden_map = learn_golden(normal_parser, learn_proc)
     anom = distr.AnomDistrComparison(golden_map, learn_proc)
