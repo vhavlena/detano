@@ -40,6 +40,56 @@ class WFAParser(AutomataParser):
         """
         return WFAParser.treba_to_wfa(filename)
 
+    @staticmethod
+    def _parse_vtf_pair(string):
+        trimmed = string.strip()
+        splt = trimmed.split(":")
+        splt[0] = int(splt[0])
+        splt[1] = float(splt[1])
+        return splt
+
+    @staticmethod
+    def _parse_vtf_states(string):
+        state_dict = {}
+        splt = string.split(" ")
+        for item in splt:
+            if len(item.strip()) != 0:
+                div = WFAParser._parse_vtf_pair(item)
+                state_dict[div[0]] = div[1]
+        return state_dict
+
+    @staticmethod
+    def _parse_vtf_transition(string):
+        splt = string.split(" ")
+        splt = [x for x in splt if len(x.strip()) > 0]
+        symbol, weight = WFAParser._parse_vtf_pair(splt[1])
+        return Transition(int(splt[0]), int(splt[2]), symbol, weight)
+
+
+    @staticmethod
+    def vtf_to_wfa(filename):
+        fhandle = open(filename, 'r')
+        initials = None
+        finals = None
+        dpa = False
+        transitions = []
+
+        for line in fhandle:
+            line = line.strip()
+            if line.startswith("%Initial"):
+                initials = WFAParser._parse_vtf_states(line[9:])
+            elif line.startswith("%Final"):
+                finals = WFAParser._parse_vtf_states(line[7:])
+            elif line.startswith("@DPA"):
+                dpa = True
+            else:
+                transitions.append(WFAParser._parse_vtf_transition(line))
+
+        if (initials is None) or (finals is None) or (not dpa):
+            raise AutomataParserException("Automaton must contain @DPA, %Initial and %Final label.")
+
+        fhandle.close()
+        return CoreWFA(transitions, finals, initials)
 
     @staticmethod
     def treba_to_wfa(filename):
