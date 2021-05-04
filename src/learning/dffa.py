@@ -60,7 +60,7 @@ class DFFA(ffa.FFA):
             raise Exception("State {0} has no predecessors".format(blue))
 
         self._trans[tr_pred.src][tr_pred.symbol] = ffa.FFATrans(tr_pred.src, \
-            red, tr_pred.weight, tr_pred.symbol)
+            red, tr_pred.weight, tr_pred.symbol, tr_pred.label)
         self.stochastic_fold(red, blue)
 
 
@@ -76,7 +76,7 @@ class DFFA(ffa.FFA):
                 tr_dest = self._trans[red][sym]
                 tr_dest.weight += tr.weight
             except KeyError:
-                self._trans[red][sym] = ffa.FFATrans(red, tr.dest, tr.weight, tr.symbol)
+                self._trans[red][sym] = ffa.FFATrans(red, tr.dest, tr.weight, tr.symbol, tr.label)
                 continue
             self.stochastic_fold(tr_dest.dest, tr.dest)
 
@@ -95,8 +95,12 @@ class DFFA(ffa.FFA):
     def state_freq(self, state):
         sum = 0
         sum += self._fin[state]
-        for _, tr in self._trans[state].items():
-            sum += tr.weight
+        for _, tr_dst in self._trans[state].items():
+            if isinstance(tr_dst, set):
+                for tr in tr_dst:
+                    sum += tr.weight
+            else:
+                sum += tr_dst.weight
         return sum
 
 
