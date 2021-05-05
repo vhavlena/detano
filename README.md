@@ -47,6 +47,9 @@ Tools are located in the directory `src`.
 - `pta_learning.py` Learning of PAs based on prefix trees--PTAs (including the
   testing phase). As an input it takes a csv file containing messages.
 
+Supporting rules are placed in directory `units` (run with
+`python3 -m units.conv_splitter <params>`).
+
 ### Structure of the Repository
 
 - `src` Source codes of the tool support
