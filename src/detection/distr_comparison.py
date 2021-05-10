@@ -45,8 +45,8 @@ class AnomDistrComparison(anom.AnomDetectBase):
     Detect if anomaly occurrs in the given window.
     """
     def detect(self, window, compair):
-        aut = self.dpa_selection(window, compair)
-        return self.apply_detection(aut, window, compair)
+        auts = self.dpa_selection(window, compair)
+        return [self.apply_detection(aut, window, compair) for aut in auts]
 
 
     """

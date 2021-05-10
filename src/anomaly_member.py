@@ -92,7 +92,7 @@ def learn_golden(parser, learn_proc):
         training = item.get_all_conversations(abstraction)
 
         fa = learn_proc(training)
-        ret[item.compair] = fa
+        ret[item.compair] = [fa]
 
     return ret
 
@@ -134,7 +134,7 @@ def main():
 
     test_file = sys.argv[3]
     test_fd = open(test_file, "r")
-    test_msgs = get_messages(test_fd)
+    test_msgs = con_par.get_messages(test_fd)
 
     normal_parser = con_par.IEC104Parser(normal_msgs)
     test_parser = con_par.IEC104Parser(test_msgs)
