@@ -154,7 +154,7 @@ def main():
     for k, v in res.items():
         print(k)
         for i in range(len(v)):
-            print("{0}: {1}".format(i, len(v[i])))
+            print("{0}: {1}".format(i, [ it for its in v[i] for it in its ]))
 
     normal_fd.close()
     test_fd.close()
