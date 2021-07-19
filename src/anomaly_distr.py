@@ -43,6 +43,8 @@ SPARSE = False
 
 rows_filter_normal = ["asduType", "cot"]
 DURATION = 300
+AGGREGATE = True
+SMOOTHING = False
 
 """
 Program parameters
@@ -94,11 +96,21 @@ def learn_golden(parser, learn_proc):
     parser_com = parser.split_communication_pairs()
 
     for item in parser_com:
-        item.parse_conversations()
-        training = item.get_all_conversations(abstraction)
+        if SMOOTHING:
+            ret[item.compair] = list()
+            wins1 = item.split_to_windows(1*DURATION)
+            wins2 = item.split_to_windows(2*DURATION)
+            for window in wins1 + wins2:
+                window.parse_conversations()
+                training = window.get_all_conversations(abstraction)
 
-        fa = learn_proc(training)
-        ret[item.compair] = [fa]
+                fa = learn_proc(training)
+                ret[item.compair].append(fa)
+        else:
+            item.parse_conversations()
+            training = item.get_all_conversations(abstraction)
+            fa = learn_proc(training)
+            ret[item.compair] = [fa]
 
     return ret
 
@@ -149,18 +161,24 @@ def main():
     anom = distr.AnomDistrComparison(golden_map, learn_proc)
 
     res = defaultdict(lambda: [])
+    i = 0
     test_com = test_parser.split_communication_pairs()
     for item in test_com:
+        i = 0
         for window in item.split_to_windows(DURATION):
             window.parse_conversations()
             r = anom.detect(window.get_all_conversations(abstraction), item.compair)
             res[item.compair].append(r)
+            i += 1
 
     #Printing results
     for k, v in res.items():
         print(k)
         for i in range(len(v)):
-            print("{0}: {1}".format(i, v[i]))
+            if AGGREGATE:
+                print("{0};{1}".format(i, min(v[i])))
+            else:
+                print("{0};{1}".format(i, v[i]))
 
     normal_fd.close()
     test_fd.close()
