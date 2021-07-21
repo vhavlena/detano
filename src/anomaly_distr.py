@@ -44,7 +44,7 @@ SPARSE = False
 rows_filter_normal = ["asduType", "cot"]
 DURATION = 300
 AGGREGATE = True
-SMOOTHING = False
+SMOOTHING = True
 
 """
 Program parameters
@@ -92,7 +92,7 @@ def learn_proc_pta(training):
 Learn a golden model from the given dataset
 """
 def learn_golden(parser, learn_proc):
-    ret = defaultdict(lambda: None)
+    ret = defaultdict(lambda: [None])
     parser_com = parser.split_communication_pairs()
 
     for item in parser_com:
@@ -172,8 +172,10 @@ def main():
             i += 1
 
     #Printing results
+    print("{0} {1}", normal_file, test_file)
     for k, v in res.items():
-        print(k)
+        [(fip, fp), (sip, sp)] = list(k)
+        print("{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp))
         for i in range(len(v)):
             if AGGREGATE:
                 print("{0};{1}".format(i, min(v[i])))

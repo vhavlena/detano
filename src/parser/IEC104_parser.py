@@ -133,7 +133,7 @@ class IEC104Parser(par.ConvParserBase):
             return True;
         if tp == ConvType.GENERAL and int(row["cot"]) not in [6,7]:
             return True
-        if tp == ConvType.GENERAL_ACT and int(row["cot"]) not in [6,7]:
+        if tp == ConvType.GENERAL_ACT and int(row["cot"]) not in [6]:
             return True
         return False
 
@@ -161,11 +161,10 @@ class IEC104Parser(par.ConvParserBase):
 
 
     """
-    Check if a given conversation is incomplete (according to the last packet)
+    Check if a given conversation is complete (according to the last packet)
     """
     def is_conversation_complete(self, conv):
-        return (int(conv[-1]["asduType"]) in [123, 124, 70, 36]) or (int(conv[-1]["cot"]) in [3, 10])
-
+        return (int(conv[-1]["asduType"]) in [123, 124, 70, 36]) or (int(conv[-1]["cot"]) in [3, 10, 44, 45, 46, 47])
 
     """
     Get a following conversation from a list of messages. It implements just a
@@ -183,6 +182,8 @@ class IEC104Parser(par.ConvParserBase):
 
             final = False
             tp = IEC104Parser.get_initial_type(row)
+            conv.append(row)
+            row = self.get_symbol(buff_read)
 
             while True:
                 if IEC104Parser.is_spontaneous(row):
