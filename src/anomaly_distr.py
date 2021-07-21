@@ -172,7 +172,7 @@ def main():
             i += 1
 
     #Printing results
-    print("{0} {1}", normal_file, test_file)
+    print("{0} {1}".format(normal_file, test_file))
     for k, v in res.items():
         [(fip, fp), (sip, sp)] = list(k)
         print("{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp))

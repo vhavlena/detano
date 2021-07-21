@@ -139,6 +139,18 @@ class IEC104Parser(par.ConvParserBase):
 
 
     """
+    Is message final
+    """
+    @staticmethod
+    def is_final(row, tp):
+        if tp == ConvType.GENERAL and int(row["cot"]) in [10, 44, 45, 46, 47]:
+            return True
+        if tp == ConvType.GENERAL_ACT and int(row["cot"]) in [10, 44, 45, 46, 47]:
+            return True
+        return False
+
+
+    """
     Get a next symbol
     """
     def get_symbol(self, buff_read):
@@ -196,6 +208,10 @@ class IEC104Parser(par.ConvParserBase):
                     self.return_symbol(row, buff_read)
                     break
                 conv.append(row)
+
+                if IEC104Parser.is_final(row, tp):
+                    break
+
                 row = self.get_symbol(buff_read)
 
         except IndexError:
