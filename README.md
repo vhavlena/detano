@@ -49,6 +49,9 @@ Tools are located in the directory `src`.
 
 Supporting rules are placed in directory `units` (run with
 `python3 -m units.conv_splitter <params>`).
+- `window_extract.py` Extract conversations from a give range of time windows.
+  The script takes a .csv file together with the number of the first and the last
+  window, and returns parsed conversations belonging to each window.
 
 ### Structure of the Repository
 

@@ -147,6 +147,8 @@ class IEC104Parser(par.ConvParserBase):
             return True
         if tp == ConvType.GENERAL_ACT and int(row["cot"]) in [10, 44, 45, 46, 47]:
             return True
+        if tp == ConvType.UNKNOWN and int(row["cot"]) in [10, 44, 45, 46, 47]:
+            return True
         return False
 
 
@@ -194,8 +196,12 @@ class IEC104Parser(par.ConvParserBase):
 
             final = False
             tp = IEC104Parser.get_initial_type(row)
+            if IEC104Parser.is_final(row, tp):
+                return [row]
+
             conv.append(row)
             row = self.get_symbol(buff_read)
+
 
             while True:
                 if IEC104Parser.is_spontaneous(row):
