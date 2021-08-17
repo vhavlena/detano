@@ -1,6 +1,7 @@
 # Automata-based Detection of Network Anomalies
 
 To run the tools you need to have installed Python 3 with the following packages
+- dataclasses
 - bidict
 - bitarray
 - numpy

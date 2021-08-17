@@ -23,13 +23,22 @@ import sys
 import os
 import csv
 import math
+from enum import Enum
 
 import learning.fpt as fpt
 import learning.alergia as alergia
 import parser.IEC104_parser as con_par
+import parser.IEC104_conv_parser as iec_prep_par
 
 rows_filter = ["asduType", "cot"]
 TRAINING = 0.33
+
+"""
+Program parameters
+"""
+class Params(Enum):
+    IPFIX = 0
+    CONV = 1
 
 
 """
@@ -52,17 +61,31 @@ Main
 """
 def main():
     argc = len(sys.argv)
+
     if argc < 2:
         sys.stderr.write("Error: bad parameters\n")
         print_help()
         sys.exit(1)
 
+    ptype = Params.IPFIX
     csv_file = sys.argv[1]
+    if argc == 3 and sys.argv[2] == "--conv":
+        ptype = Params.CONV
+
     csv_fd = open(csv_file, "r")
     csv_file = os.path.basename(csv_file)
 
+    ############################################################################
+    # Preparing the learning data
+    ############################################################################
     normal_msgs = con_par.get_messages(csv_fd)
-    parser = con_par.IEC104Parser(normal_msgs)
+
+    parser = None
+    if ptype == Params.IPFIX:
+        parser = con_par.IEC104Parser(normal_msgs)
+    elif ptype == Params.CONV:
+        parser = iec_prep_par.IEC104ConvParser(normal_msgs)
+
     parser.parse_conversations()
     lines = parser.get_all_conversations(abstraction)
 
