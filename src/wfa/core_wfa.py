@@ -72,8 +72,21 @@ class CoreWFA(object):
             self._start = {0: 1.0}
         self._states_dict = None
         self._alphabet = alphabet
-        self._states = None
-        self._modif = True
+        if alphabet is None:
+            self._alphabet = self.get_alphabet()
+        self._states = self._get_states()
+
+
+    def __eq__(self, other):
+        return (self._transitions == other._transitions) and \
+            (self._finals == other._finals) and \
+            (self._start == other._start) and \
+            (self._alphabet == other._alphabet)
+
+
+    def __hash__(self):
+        return hash((tuple(self._transitions), tuple(self._finals), tuple(self._start), tuple(self._alphabet)))
+
 
     def get_transitions(self):
         """Get all transitions of the WFA.
@@ -100,7 +113,6 @@ class CoreWFA(object):
         Keyword arguments:
         finals -- Dictionary of final states and their probability of accepting.
         """
-        self._modif = True
         self._finals = finals
 
     def get_starts(self):
@@ -115,7 +127,6 @@ class CoreWFA(object):
 
         Return: Dictionary: Initial state -> float (weight)
         """
-        self._modif = True
         self._start = start
 
     def get_alphabet(self):
@@ -140,15 +151,12 @@ class CoreWFA(object):
             dct.inverse[x.symbol], x.weight), self._transitions))
 
 
-    def get_states(self):
+    def _get_states(self):
         """Get all states of the WFA (the list of states is computed
         from the transitions).
 
         Return: List of states.
         """
-        if not self._modif:
-            return self._states
-
         states = set([])
         for start, _ in self._start.items():
             if start not in states:
@@ -163,8 +171,16 @@ class CoreWFA(object):
                 states.add(transition.dest)
 
         self._states = list(states)
-        self._modif = False
         return list(states)
+
+
+    def get_states(self):
+        """Get all states of the WFA (the list of states is computed
+        from the transitions).
+
+        Return: List of states.
+        """
+        return self._states
 
     def get_rename_dict(self):
         """Get the dictionary containing original state labels and renamed
@@ -274,7 +290,7 @@ class CoreWFA(object):
         self._transitions = new_transitions
         self._finals = new_finals
         self._start = new_starts
-        self._modif = True
+        self._states = self._get_states()
 
 
     def product(self, aut):

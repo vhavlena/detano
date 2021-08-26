@@ -112,6 +112,8 @@ def learn_golden(parser, learn_proc):
             fa = learn_proc(training)
             ret[item.compair] = [fa]
 
+    for k,v in ret.items():
+        ret[k] = list(set(v))
     return ret
 
 
