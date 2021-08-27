@@ -27,6 +27,7 @@ import csv
 import ast
 import math
 import itertools
+from dataclasses import dataclass
 from collections import defaultdict
 from enum import Enum
 
@@ -49,9 +50,17 @@ SMOOTHING = True
 """
 Program parameters
 """
-class Params(Enum):
+class Algorithms(Enum):
     PA = 0
     PTA = 1
+
+
+@dataclass
+class Params:
+    alg : Algorithms
+    normal_file : str
+    test_file : str
+    reduced : float
 
 
 """
@@ -112,8 +121,6 @@ def learn_golden(parser, learn_proc):
             fa = learn_proc(training)
             ret[item.compair] = [fa]
 
-    for k,v in ret.items():
-        ret[k] = list(set(v))
     return ret
 
 
@@ -123,10 +130,11 @@ Print help message
 def print_help():
     print("Anomaly detection based on distribution comparison")
     print()
-    print("./anomaly_distr <opt> <valid traffic csv> <anomaly csv>")
-    print("<opt> is one of the following:")
+    print("./anomaly_distr <valid traffic csv> <anomaly csv> <opts>")
+    print("<opts> are from the following:")
     print("  --pa detection based on PAs")
     print("  --pta detection based on PTAs")
+    print("  --reduced=val remove Euclid similar automata (with error bounded by val)")
 
 
 """
@@ -134,26 +142,40 @@ Distribution-comparison-based anomaly detection
 """
 def main():
     argc = len(sys.argv)
-    if argc < 4:
+    if argc < 3:
         sys.stderr.write("Error: bad parameters\n")
         print_help()
         sys.exit(1)
 
-    alg = Params.PA
+    par = Params(Algorithms.PA, sys.argv[1], sys.argv[2], None)
     learn_proc = None
-    if sys.argv[1] == "--pa":
-        alg = Params.PA
-        learn_proc = learn_proc_pa
-    elif sys.argv[1] == "--pta":
-        alg = Params.PTA
-        learn_proc = learn_proc_pta
+    try:
+        opts, args = getopt.getopt(sys.argv[3:], "hr:", ["help", "reduced=", "pa", "pta"])
+    except getopt.GetoptError as err:
+        sys.stderr.write("Error: bad parameters\n")
+        print_help()
+        sys.exit(1)
+    for o, a in opts:
+        if o == "--pa":
+            par.alg = Algorithms.PA
+            learn_proc = learn_proc_pa
+        elif o == "--pta":
+            par.alg = Algorithms.PTA
+            learn_proc = learn_proc_pta
+        elif o in ("-h", "--help"):
+            print_help()
+            sys.exit()
+        elif o in ("-r", "--reduced"):
+            par.red = a
+        else:
+            sys.stderr.write("Error: bad parameters\n")
+            print_help()
+            sys.exit(1)
 
-    normal_file = sys.argv[2]
-    normal_fd = open(normal_file, "r")
+    normal_fd = open(par.normal_file, "r")
     normal_msgs = con_par.get_messages(normal_fd)
 
-    test_file = sys.argv[3]
-    test_fd = open(test_file, "r")
+    test_fd = open(par.test_file, "r")
     test_msgs = con_par.get_messages(test_fd)
 
     normal_parser = con_par.IEC104Parser(normal_msgs)
@@ -161,6 +183,10 @@ def main():
 
     golden_map = learn_golden(normal_parser, learn_proc)
     anom = distr.AnomDistrComparison(golden_map, learn_proc)
+
+    anom.remove_identical()
+    if par.reduced is not None:
+        anom.remove_euclid_similar(0.1)
 
     res = defaultdict(lambda: [])
     i = 0
@@ -174,7 +200,7 @@ def main():
             i += 1
 
     #Printing results
-    print("{0} {1}".format(normal_file, test_file))
+    print("{0} {1}".format(par.normal_file, par.test_file))
     for k, v in res.items():
         [(fip, fp), (sip, sp)] = list(k)
         print("{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp))
