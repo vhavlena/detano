@@ -98,6 +98,14 @@ def learn_proc_pta(training):
 
 
 """
+Communication entity string format
+"""
+def ent_format(k):
+    [(fip, fp), (sip, sp)] = list(k)
+    return "{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp)
+
+
+"""
 Learn a golden model from the given dataset
 """
 def learn_golden(parser, learn_proc):
@@ -166,7 +174,7 @@ def main():
             print_help()
             sys.exit()
         elif o in ("-r", "--reduced"):
-            par.red = a
+            par.reduced = float(a)
         else:
             sys.stderr.write("Error: bad parameters\n")
             print_help()
@@ -186,7 +194,11 @@ def main():
 
     anom.remove_identical()
     if par.reduced is not None:
-        anom.remove_euclid_similar(0.1)
+        anom.remove_euclid_similar(par.reduced)
+
+    print("Automata counts: ")
+    for k,v in anom.golden_map.items():
+        print("{0} | {1}".format(ent_format(k), len(v)))
 
     res = defaultdict(lambda: [])
     i = 0
@@ -199,11 +211,11 @@ def main():
             res[item.compair].append(r)
             i += 1
 
+    print("\nDetection results: ")
     #Printing results
     print("{0} {1}".format(par.normal_file, par.test_file))
     for k, v in res.items():
-        [(fip, fp), (sip, sp)] = list(k)
-        print("{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp))
+        print(ent_format(k))
         for i in range(len(v)):
             if AGGREGATE:
                 print("{0};{1}".format(i, min(v[i])))

@@ -19,7 +19,7 @@ PAs are specified using a format, which given as follows.
 (<final state> <probability>)*
 ```
 
-### Tool Support
+### Tool Support Overview
 
 All tools in the suite works with automata obtained from a list of messages
 (packets) divided into *conversations* (messages that logically belong
@@ -53,6 +53,25 @@ Supporting rules are placed in directory `units` (run with
 - `window_extract.py` Extract conversations from a give range of time windows.
   The script takes a .csv file together with the number of the first and the last
   window, and returns parsed conversations belonging to each window.
+
+
+### Anomaly Detection
+
+The anomaly detection approaches implemented within the tools `anomaly_member.py`
+and `anomaly_distr.py` take as an input a file capturing valid traffic and a
+file containing traffic to be inspected. Examples of csv input files can be found
+on [Dataset repository](https://github.com/matousp/datasets). More specifically,
+detection approaches (based on distribution comparison or single conversation
+  reasoning) can be run as follows:
+
+- `anomaly_member.py <valid csv file> <inspected csv file> <opts>` where
+  `<opts>` allows the following specifications:
+  * `--pa/--pta` detection is based on PAs or PTAs, respectively
+- `anomaly_distr.py <valid csv file> <inspected csv file> <opts>` where
+  `<opts>` allows the following specifications:
+  * `--pa/--pta` detection is based on PAs or PTAs, respectively
+  * `--reduced=val` remove Euclid similar automata with the threshold val
+
 
 ### Structure of the Repository
 
