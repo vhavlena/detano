@@ -58,9 +58,9 @@ Supporting rules are placed in directory `units` (run with
 ### Anomaly Detection
 
 The anomaly detection approaches implemented within the tools `anomaly_member.py`
-and `anomaly_distr.py` take as an input a file capturing valid traffic and a
+and `anomaly_distr.py` take as an input a file capturing valid network traffic and a
 file containing traffic to be inspected. Examples of csv input files can be found
-on [Dataset repository](https://github.com/matousp/datasets). More specifically,
+in [Dataset repository](https://github.com/matousp/datasets). More specifically,
 detection approaches (based on distribution comparison or single conversation
   reasoning) can be run as follows:
 
@@ -72,6 +72,18 @@ detection approaches (based on distribution comparison or single conversation
   * `--pa/--pta` detection is based on PAs or PTAs, respectively
   * `--reduced=val` remove Euclid similar automata with the threshold val
 
+### Automata Learning
+
+Approaches for learning of probabilistic automata in the context of industrial
+networks are implemented within the tools `pa_learning.py` and `pta_learning.py`.
+Both tools take as an input a file capturing network traffic. Examples of csv
+input files can be found in [Dataset repository](https://github.com/matousp/datasets).
+More specifically, the tools can be run as follows:
+
+- `pa_learning.py <csv file> <opts>` where `<opts>` allows the following specifications:
+  * `--conv` expect the input file already to be divided into conversations
+- `pta_learning.py <csv file> <opts>` where `<opts>` allows the following specifications:
+  * `--conv` expect the input file already to be divided into conversations
 
 ### Structure of the Repository
 
