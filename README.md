@@ -1,14 +1,22 @@
 # Automata-based Detection of Network Anomalies
 
+Detano toolsuite is tailored for learning probabilistic automata (Alergia
+algorithm with extensions) and anomaly detection in ICS networks based on
+probabilistic automata.
+
+### Installation
+
 To run the tools you need to have installed Python 3 with the following packages
 - dataclasses
 - bidict
 - bitarray
 - numpy
 - scipy
-- FAdo for Python 3 (install via `requirements.txt`)
+- FAdo for Python 3
 
-These packages you can install using the `pip3` util.
+These packages you can install using the `pip3` util. Or you can use the
+provided `requirements.txt` file (all dependencies can be installed via `pip3
+install -r requirements.txt`).
 
 ### Automata Format
 
@@ -88,3 +96,17 @@ More specifically, the tools can be run as follows:
 ### Structure of the Repository
 
 - `src` Source codes of the tool support
+
+### Citing
+
+**Efficient Modelling of ICS Communication For Anomaly Detection Using Probabilistic Automata**. Petr Matoušek, Vojtěch Havlena, and Lukáš Holík. In
+*Proceedings of IFIP/IEEE International Symposium on Integrated Network
+Management*. ISBN 978-3-903176-32-4. 2021
+([pdf](http://dl.ifip.org/db/conf/im/im2021/210993.pdf))
+
+### Contact
+
+If you have a question, do not hesitate to contact the authors:
+- Vojtěch Havlena `<ihavlena at fit.vutbr.cz>`
+- Petr Matoušek `<matousp at fit.vutbr.cz>`
+- Lukáš Holík `<holik at fit.vutbr.cz>`
