@@ -75,7 +75,7 @@ Print help message
 def print_help():
     print("./pa_learning <csv file> [OPT]")
     print("OPT are from the following: ")
-    print("\t--type=pa/pta\t\tlearning based on PAs/PTAs (default PA)")
+    print("\t--atype=pa/pta\t\tlearning based on PAs/PTAs (default PA)")
     print("\t--format=conv/ipfix\tformat of input file: conversations/IPFIX (default IPFIX)")
     print("\t--help\t\t\tprint this message")
 
@@ -140,19 +140,18 @@ Main
 """
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ht:f:", ["help", "type=", "format="])
+        opts, args = getopt.getopt(sys.argv[1:], "ha:f:", ["help", "atype=", "format="])
         if len(args) > 0:
-            opts, _ = getopt.getopt(args[1:], "ht:f:", ["help", "type=", "format="])
+            opts, _ = getopt.getopt(args[1:], "ha:f:", ["help", "atype=", "format="])
     except getopt.GetoptError as err:
         sys.stderr.write("Error: bad parameters (try --help)\n")
-        print_help()
         sys.exit(1)
 
     params = Params(Algorithms.PA, None, InputFormat.IPFIX)
     learn_fnc = learn_pa
 
     for o, a in opts:
-        if o in ("-t", "--type"):
+        if o in ("-a", "--atype"):
             if a == "pa":
                 params.alg = Algorithms.PA
                 learn_fnc = learn_pa
