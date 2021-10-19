@@ -38,23 +38,15 @@ incomplete parser for IEC 104 is provided).
 
 
 Tools are located in the directory `src`.
-- `anomaly_member.py` Tool for a detection of anomalies in a csv file (testing
+- `anomaly_check.py` Tool for a detection of anomalies in a csv file (testing
   file) based on a given valid traffic sample (training file). Based on the
   particular method, a PA/PTA is first obtained from training file. The
-  detection mechanism then checks whether conversations from testing file
-  (divided into time windows) all belongs to language of the learned PA/PTA
-  (i.e., each conversation has nonzero probability).
-- `anomaly_distr.py` Tool for a detection of anomalies in a csv file (testing
-  file) based on a given valid traffic sample (training file). Based on the
-  particular method, a PA/PTA is first obtained from training file. The
-  detection mechanism then checks whether, for each time window from the testing
-  file, the Euclid distance of a PA/PTA obtained from that window with the
-  PA/PTA obtained from the training file is below a threshold.
-- `pa_learning.py` Learning of PAs based on own implementation of Alergia
-  (including the testing phase). As an input it takes a csv file containing
-  messages.
-- `pta_learning.py` Learning of PAs based on prefix trees--PTAs (including the
-  testing phase). As an input it takes a csv file containing messages.
+  detection mechanism then checks whether conversations differs from the testing
+  file. Currently supported approaches include detection based on comparing
+  distributions and detection based on single conversation reasoning.
+- `pa_learning.py` Learning of PA based on own implementation of Alergia
+  (including the testing phase) and learning based on prefix trees (PTAs). As an
+  input it takes a csv file containing messages.
 
 Supporting rules are placed in directory `units` (run with
 `python3 -m units.conv_splitter <params>`).
@@ -65,33 +57,35 @@ Supporting rules are placed in directory `units` (run with
 
 ### Anomaly Detection
 
-The anomaly detection approaches implemented within the tools `anomaly_member.py`
-and `anomaly_distr.py` take as an input a file capturing valid network traffic and a
-file containing traffic to be inspected. Examples of csv input files can be found
-in [Dataset repository](https://github.com/matousp/datasets). More specifically,
-detection approaches (based on distribution comparison or single conversation
-  reasoning) can be run as follows:
+The anomaly detection approaches implemented within the tool `anomaly_check.py`
+takes as an input a file capturing valid network traffic and a file containing
+traffic to be inspected. Examples of csv input files can be found in [Dataset
+repository](https://github.com/matousp/datasets). More specifically, detection
+approaches (based on distribution comparison or single conversation reasoning)
+can be run as follows:
 
-- `anomaly_member.py <valid csv file> <inspected csv file> <opts>` where
-  `<opts>` allows the following specifications:
-  * `--pa/--pta` detection is based on PAs or PTAs, respectively
-- `anomaly_distr.py <valid csv file> <inspected csv file> <opts>` where
-  `<opts>` allows the following specifications:
-  * `--pa/--pta` detection is based on PAs or PTAs, respectively
-  * `--reduced=val` remove Euclid similar automata with the threshold val
+- `anomaly_check.py <valid csv file> <inspected csv file> [OPT]` where
+  `OPT` allows the following specifications:
+  * `--atype=pa/pta` learning based on PAs/PTAs (default PA)
+  * `--alg=distr/member` anomaly detection based on comparing distributions
+    (distr) or single message reasoning (member) (default distr)
+  * `--smoothing` use smoothing (for distr only)
+  * `--reduced=val` remove similar automata with the given error upper-bound val
+    [0,1] (for distr only)
+  * `--help` print a help message
 
 ### Automata Learning
 
 Approaches for learning of probabilistic automata in the context of industrial
-networks are implemented within the tools `pa_learning.py` and `pta_learning.py`.
-Both tools take as an input a file capturing network traffic. Examples of csv
-input files can be found in [Dataset repository](https://github.com/matousp/datasets).
-More specifically, the tools can be run as follows:
+networks are implemented within the tool `pa_learning.py`. The tool takes as an
+input a file capturing network traffic. Examples of csv input files can be found
+in [Dataset repository](https://github.com/matousp/datasets). More specifically,
+the tool can be run as follows:
 
-- `pa_learning.py <csv file> <opts>` where `<opts>` allows the following specifications:
-  * `--conv` expect the input file already to be divided into conversations
-- `pta_learning.py <csv file> <opts>` where `<opts>` allows the following specifications:
-  * `--conv` expect the input file already to be divided into conversations
+- `pa_learning.py <csv file> [OPT]` where `OPT` allows the following specifications:
+  * `--atype=pa/pta` learning based on PAs/PTAs (default PA)
+  * `--format=conv/ipfix` format of input file: conversations/IPFIX (default IPFIX)
+  * `--help` print a help message
 
 ### Structure of the Repository
 
