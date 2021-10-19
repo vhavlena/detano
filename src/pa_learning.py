@@ -33,7 +33,7 @@ import parser.IEC104_parser as con_par
 import parser.IEC104_conv_parser as iec_prep_par
 
 rows_filter = ["asduType", "cot"]
-TRAINING = 1.0
+TRAINING = 0.33
 
 """
 Program parameters
@@ -73,7 +73,11 @@ def abstraction(item):
 Print help message
 """
 def print_help():
-    print("./pa_learning <csv file>")
+    print("./pa_learning <csv file> [OPT]")
+    print("OPT are from the following: ")
+    print("\t--type=pa/pta\t\tlearning based on PAs/PTAs (default PA)")
+    print("\t--format=conv/ipfix\tformat of input file: conversations/IPFIX (default IPFIX)")
+    print("\t--help\t\t\tprint this message")
 
 
 """
@@ -140,7 +144,7 @@ def main():
         if len(args) > 0:
             opts, _ = getopt.getopt(args[1:], "ht:f:", ["help", "type=", "format="])
     except getopt.GetoptError as err:
-        sys.stderr.write("Error: bad parameters\n")
+        sys.stderr.write("Error: bad parameters (try --help)\n")
         print_help()
         sys.exit(1)
 
@@ -164,11 +168,11 @@ def main():
             elif a == "ipfix":
                 params.file_format = InputFormat.IPFIX
         else:
-            sys.stderr.write("Error: unrecognized parameters\n")
+            sys.stderr.write("Error: unrecognized parameters (try --help)\n")
             sys.exit(1)
 
     if len(args) == 0:
-        sys.stderr.write("Missing input file\n")
+        sys.stderr.write("Missing input file (try --help)\n")
         sys.exit(1)
     params.file = args[0]
 
