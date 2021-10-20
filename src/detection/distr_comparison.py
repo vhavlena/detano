@@ -1,22 +1,29 @@
 #!/usr/bin/env python3
 
-"""
-Distribution-based anomaly detection.
+"""!
+\brief Distribution-based anomaly detection.
 
-Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>
+\details
+    This file contains support for anomaly detection based on comparing
+    distributions, which works as follows. In the first step, we learn a PA from
+    an input traffic window. Consequently, we compare the difference between a
+    model PA and the PA representing input window.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
+\copyright
+    Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
+}
 """
 
 import math
@@ -25,64 +32,100 @@ import wfa.core_wfa_export as core_wfa_export
 import wfa.matrix_wfa as matrix_wfa
 import algorithms.distance as dist
 
+## Use sparse matrices to comput the Euclid distance
 SPARSE = False
 
 class AnomDistrComparison(anom.AnomDetectBase):
+    """!
+    Anomaly detection based on comparing distributions
+    """
+
 
     def __init__(self, aut_map, learning_procedure):
+        """!
+        Constructor
+
+        @param aut_map: Mapping of communication pairs to automata representing normal behavior
+        @param learning_procedure: procedure used to obtain a PA from a list of messages
+        """
+        ## Mapping of communication pairs to automata representing normal behavior
         self.golden_map = aut_map
+        ## Procedure used to obtain a PA from a list of messages
         self.learning_proc = learning_procedure
 
 
-    """
-    Select appropriate DPA according to a communication window and a
-    communication pair.
-    """
+
     def dpa_selection(self, window, compair):
+        """!
+        Select appropriate DPA according to a communication window and a
+        communication pair.
+
+        @param window: List of messages corresponding to a single window
+        @param compair: Pair of communicating devices
+
+        @return Selected DPA
+        """
         return self.golden_map[compair]
 
 
-    """
-    Detect if anomaly occurrs in the given window.
-    """
     def detect(self, window, compair):
+        """!
+        Detect if anomaly occurrs in the given window.
+
+        @param window: List of messages corresponding to a single window to be checked
+        @param compair: Pair of communicating devices
+
+        @return List of floats representing distance between golden automata and a window
+        """
         auts = self.dpa_selection(window, compair)
         return [self.apply_detection(aut, window, compair) for aut in auts]
 
 
-    """
-    Remove identical automata from the golden map
-    """
     def remove_identical(self):
+        """!
+        Remove identical automata from the golden map
+        """
         for k, v in self.golden_map.items():
             self.golden_map[k] = list(set(v))
 
 
-    """
-    Remove Euclid similar automata from the golden map (with the error bounded
-    by max_error).
-    """
     def remove_euclid_similar(self, max_error):
+        """!
+        Remove Euclid similar automata from the golden map (with the error bounded
+        by max_error).
+
+        @param max_error: Maximum error bound
+        """
         self.remove_identical()
         for k, v in self.golden_map.items():
             self.golden_map[k] = self._remove_euclid_similar_it(max_error, v)
 
 
-    """
-    Remove Euclid similar automata from the given list of automata (with the error bounded
-    by max_error).
-    """
     def _remove_euclid_similar_it(self, max_error, lst):
+        """!
+        Remove Euclid similar automata from the given list of automata (with the error bounded
+        by max_error).
+
+        @param max_error: Maximum error bound
+        @param lst: List of automata to be pruned
+
+        @return List with removed similar automata
+        """
         aut_dist = dict([ ((a,b), AnomDistrComparison.euclid_distance(a,b)) for a in lst for b in lst if a != b ])
         d = dist.Distance(aut_dist, lst)
         return d.compute_subset_error(max_error)
 
 
-    """
-    Compute Euclid distance between two automata
-    """
     @staticmethod
     def euclid_distance(aut1, aut2):
+        """!
+        Compute Euclid distance between two automata
+
+        @param aut1: First PA
+        @param aut2: Second PA
+
+        @return Euclid distance of aut1 and aut2
+        """
         if ((len(aut1.get_transitions()) > 0 and len(aut2.get_transitions()) == 0)) or \
             ((len(aut1.get_transitions()) == 0 and len(aut2.get_transitions()) > 0)):
             return 1.0
@@ -111,10 +154,16 @@ class AnomDistrComparison(anom.AnomDetectBase):
         return min(1.0, math.sqrt(max(0.0, res1 - 2*res2 + res3)))
 
 
-    """
-    Apply distribution-comparison-based anomaly detection.
-    """
     def apply_detection(self, aut, window, compair):
+        """!
+        Apply distribution-comparison-based anomaly detection.
+
+        @param aut: Golden automaton
+        @param window: List of messages to be inspected
+        @param compair: Pair of communicating devices
+
+        @return Number representing similarity of aut and window
+        """
 
         if aut is None and len(window) == 0:
             return 0.0
@@ -132,3 +181,5 @@ class AnomDistrComparison(anom.AnomDetectBase):
             d = AnomDistrComparison.euclid_distance(test_fa, aut)
             SPARSE = False
         return d
+
+""" @} """

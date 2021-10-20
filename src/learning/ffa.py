@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 
-"""
-Class for general frequency automata.
+"""!
+\brief Class for general frequency automata.
 
-Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>
+\details Class providing operations for general (nondeterministic) frequency automata.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
+\copyright
+    Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
 """
 
 import copy
@@ -27,16 +29,35 @@ import wfa.core_wfa_export as core_wfa_export
 
 @dataclass(eq=True, unsafe_hash=True)
 class FFATrans:
+    """!
+    Class representing a transtion of the FFA
+    """
+    ## Source state
     src: str
+    ## Destination state
     dest: str
+    ## Weight
     weight: int
+    ## Symbol
     symbol: int
+    ## Label
     label: int
 
 
 class FFA:
+    """!
+    General frequency automata (FFA)
+    """
 
     def __init__(self, states, trans, ini, fin):
+        """!
+        Constructor
+
+        @param states: States of the DFFA
+        @param trans: Transitions of the DFFA
+        @param ini: Initial states
+        @param fin: Final states
+        """
         self._states = states
         self._trans = trans
         self._ini = ini
@@ -44,20 +65,29 @@ class FFA:
         self._states_dict = None
 
 
-    """
-    Find transition with equal structure (except weight and label)
-    """
     def _find_eq_trans(self, val, trans):
+        """!
+        Find transition with equal structure (except weight and label)
+
+        @param val: Given transition
+        @param trans: Collection of all transitions
+
+        @return Transition corresponding to val
+        """
         for tr in trans:
             if tr.src == val.src and tr.dest == val.dest and tr.symbol == val.symbol:
                 return tr
         return None
 
 
-    """
-    Create transition function from a list of transitions
-    """
     def _create_tr_func(self, tr_list):
+        """!
+        Create transition function from a list of transitions
+
+        @param tr_list: List of transitions
+
+        @return Transitions represented by a dictionary (transition function)
+        """
         tr_func = defaultdict(lambda: dict())
         for tr in tr_list:
             try:
@@ -73,10 +103,17 @@ class FFA:
         return tr_func
 
 
-    """
-    Merge states in initial/final state vector
-    """
+
     def _merge_in_dict(self, states, id, dct):
+        """!
+        Merge states in initial/final state vector
+
+        @param states: Collection of states
+        @param id: Identifier
+        @param dct: Dictionary
+
+        @return Dictionary with merged values
+        """
         new_dict = defaultdict(lambda: 0)
         tw = 0
         for st, weight in dct.items():
@@ -89,11 +126,12 @@ class FFA:
         return new_dict
 
 
-
-    """
-    Get list of transitions from the transition function
-    """
     def get_transition_list(self):
+        """!
+        Get list of transitions from the transition function
+
+        @return List of transitions
+        """
         lst = []
         for src, tr_dest in self._trans.items():
             for sym, dst in tr_dest.items():
@@ -104,10 +142,12 @@ class FFA:
         return lst
 
 
-    """
-    Inverse the transition function
-    """
     def inverse_ffa(self):
+        """!
+        Get the inverse FFA
+
+        @return FFA with the inverse transition function
+        """
         lst = copy.deepcopy(self.get_transition_list())
         for tr in lst:
             tr.src, tr.dest = tr.dest, tr.src
@@ -117,22 +157,50 @@ class FFA:
 
 
     def _get_inits(self):
+        """!
+        Get initial states
+
+        @return Initial states of the FFA
+        """
         return list(self._ini.items())
 
 
     def get_states(self):
+        """!
+        Get all states
+
+        @return All states of the FFA
+        """
         return self._states
 
 
     def get_finals(self):
+        """!
+        Get final states
+
+        @return Final states of the FFA
+        """
         return self._fin
 
 
     def get_transitions(self):
+        """!
+        Get transitions
+
+        @return Transitions of the FFA
+        """
         return self._trans
 
 
     def successors(self, state, sym=None):
+        """!
+        Get all successors from state over sym
+
+        @param state: State
+        @param sym: Symbol
+
+        @return Set of all successors
+        """
         succ = set()
         for s, tr_dest in self._trans[state].items():
             if sym is not None and s != sym:
@@ -145,6 +213,14 @@ class FFA:
 
 
     def successors_set(self, states, sym=None):
+        """!
+        Get all successors from the set states over sym
+
+        @param states: State
+        @param sym: Symbol
+
+        @return Set of all successors
+        """
         succ = set()
         for st in states:
             succ = succ | self.successors(st, sym)
@@ -152,15 +228,25 @@ class FFA:
 
 
     def reachable_states(self, st_set):
+        """!
+        Get all reachable states from st_set
+
+        @param st_set: Set of states
+
+        @return Set of reachable states
+        """
         new_set = self.successors_set(st_set)
         if new_set <= st_set:
             return st_set
         return self.reachable_states(new_set | st_set)
 
-    """
-    Merge a set of states (remove those states and replace with one in the set)
-    """
+
     def merge_states(self, states):
+        """!
+        Merge a set of states (remove those states and replace with one in the set)
+
+        @param states: States to be merged
+        """
         id = next(iter(states))
         self._states = self._states - states
         deterministic = False
@@ -182,15 +268,25 @@ class FFA:
         self._states_dict = None
 
 
-    """
-    Merge equivalent states according to equivalent classes
-    """
     def merge_equivalent(self, classes):
+        """!
+        Merge equivalent states according to the equivalent classes
+
+        @param classes: Partitioning of the states
+        """
         for item in classes:
             self.merge_states(item)
 
 
     def path_length(self, st1, st2):
+        """!
+        Get length of a shortest path between st1 and st2
+
+        @param st1: Source state
+        @param st2: Destination state
+
+        @return Length of a shortest path
+        """
         new_set = set([st1])
         ln = 0
         all = set()
@@ -203,10 +299,10 @@ class FFA:
         return None
 
 
-    """
-    Remove unreachable states from the automaton.
-    """
     def trim(self):
+        """
+        Remove unreachable states from the automaton.
+        """
         reach = self.reachable_states(set(self._ini.keys()))
         new_tran = defaultdict(lambda: dict())
         st_rem = self._states - reach
@@ -223,10 +319,10 @@ class FFA:
         self._trans = new_tran
 
 
-    """
-    Rename states to consecutive numbers (from 0)
-    """
     def rename_states(self):
+        """
+        Rename states to consecutive numbers (from 0)
+        """
         self._states_dict = dict()
         new_transitions = []
         new_states = set()
@@ -267,15 +363,12 @@ class FFA:
         self._states = new_states
 
 
-    """
-    Export the automaton to graphwiz format.
-    """
     def to_graphiwiz(self, legend=None):
-        """Convert the WFA to graphwiz format (for graphical visualization).
+        """!
+        Convert the WFA to graphwiz format (for graphical visualization).
 
-        Return: String (Graphwiz format)
-        Keyword arguments:
-        state_label -- label of each state (shown inside of the state)
+        @param legend: Legend to be print in the figure
+        @return Graphwiz format of the automaton
         """
         dot = str()
         dot += "digraph \" Automat \" {\n    rankdir=LR;\n"
@@ -313,6 +406,16 @@ class FFA:
 
 
     def _print_transition(self, src, dest, sym, weight):
+        """!
+        Convert a transition to graphwiz format
+
+        @param src: Source state
+        @param dest: Destination state
+        @oaram sym: Symbol
+        @param weight: Weight
+
+        @return Graphwiz format
+        """
         dot = str()
         dot += "\"" + str(src) + "\""
         dot += " -> "
@@ -322,10 +425,12 @@ class FFA:
         return dot
 
 
-    """
-    Converts FFA to WFA (weighted finite automaton)
-    """
     def to_wfa(self):
+        """!
+        Converts FFA to WFA (weighted finite automaton)
+
+        @return FFA represented as WFA
+        """
         trs = []
         for _, tr_dest in self._trans.items():
             for sym, dst in tr_dest.items():

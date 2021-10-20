@@ -1,22 +1,29 @@
 #!/usr/bin/env python3
 
-"""
-Member-based anomaly detection.
+"""!
+\brief
+    Member-based anomaly detection.
 
-Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>
+\details
+    Anomaly detection based on a single message reasoning. Given PAs
+    representing a valid network traffic, we check if input messages in a window
+    are in the language of a model.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+\copyright
+    Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
 
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
 """
 
 import math
@@ -26,33 +33,60 @@ import wfa.matrix_wfa as matrix_wfa
 
 
 class AnomMember(anom.AnomDetectBase):
+    """!
+    Anomaly detection based on a single message reasoning
+    """
 
     def __init__(self, aut_map, learning_procedure):
+        """!
+        Constructor
+
+        @param aut_map: Mapping of communication pairs to automata representing normal behavior
+        @param learning_procedure: procedure used to obtain a PA from a list of messages
+        """
+        ## Mapping of communication pairs to automata representing normal behavior
         self.golden_map = aut_map
+        ## Procedure used to obtain a PA from a list of messages
         self.learning_proc = learning_procedure
 
 
-    """
-    Select appropriate DPA according to a communication window and a
-    communication pair.
-    """
     def dpa_selection(self, window, compair):
+        """!
+        Select appropriate DPA according to a communication window and a
+        communication pair.
+
+        @param window: List of messages to be inspected
+        @param compair: Pair of communicating devices
+
+        @return Selected DPA
+        """
         return self.golden_map[compair]
 
 
-    """
-    Detect if anomaly occurrs in the given window.
-    """
     def detect(self, window, compair):
+        """!
+        Detect if anomaly occurrs in the given window.
+
+        @param window: List of messages to be inspected
+        @param compair: Pair of communicating devices
+
+        @return List of detection result for each model
+        """
         auts = self.dpa_selection(window, compair)
         return [self.apply_detection(aut, window, compair) for aut in auts]
 
 
-    """
-    Apply member-based anomaly detection. Returns list of conversations that
-    are not accepted by aut.
-    """
     def apply_detection(self, aut, window, compair):
+        """!
+        Apply member-based anomaly detection. Returns list of conversations that
+        are not accepted by aut.
+
+        @param aut: Golden automaton
+        @param window: List of messages to be inspected
+        @param compair: Pair of communicating devices
+
+        @return List of not accepted messages
+        """
 
         if aut is None:
             return window

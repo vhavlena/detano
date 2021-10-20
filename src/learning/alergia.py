@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 
-"""
-Alergia algorithm for learning deterministic probabilistic automata.
+"""!
+\brief Alergia algorithm
 
-Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>
+\details
+    Alergia algorithm for learning deterministic probabilistic automata for
+    the context of network communication.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
+\copyright
+    Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
 """
 
 import sys
@@ -25,6 +29,15 @@ import learning.fpt as fpt
 import learning.dffa as dffa
 
 def choose_blue_state(freq_aut, blue_set, t0):
+    """!
+    Chose a blue state from a set of blue states.
+
+    @param freq_aut: Frequency automaton
+    @param blue_set: Set of blue states
+    @param t0: The minimum number of strings for merging a state
+
+    @return Chosen blue state
+    """
     for bl in sorted(blue_set):
         if freq_aut.state_freq(bl) >= t0:
             return bl
@@ -32,21 +45,32 @@ def choose_blue_state(freq_aut, blue_set, t0):
 
 
 def choose_red_state(freq_aut, red_set, blue, alpha):
+    """!
+    Chose a red state from a set of red states.
+
+    @param freq_aut: Frequency automaton
+    @param red_set: Set of red states
+    @param blue: Blue state
+    @param alpha: Merging parameter
+
+    @return Chosen red state
+    """
     for red in sorted(red_set):
         if freq_aut.alergia_compatible(red, blue, alpha):
             return red
     return None
 
 
-"""
-PA learning using the Alergia algorithm.
-
-Keyword arguments:
-  freq_aut: a frequency automaton constructed from the input sample
-  alpha: merging parameter
-  t0: a minimum number of strings for merging a state 
-"""
 def alergia(freq_aut, alpha, t0):
+    """!
+    PA learning using the Alergia algorithm.
+
+    @param freq_aut: A frequency automaton constructed from the input sample
+    @param alpha: Merging parameter
+    @param t0: The minimum number of strings for merging a state
+
+    @return Compact frequency automaton (no normalization applied)
+    """
     freq_aut.get_states()
     red_set = set([freq_aut.get_root()])
     blue_set = freq_aut.successors(freq_aut.get_root())

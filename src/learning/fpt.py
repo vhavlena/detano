@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 
-"""
-Class for frequency prefix tree automata.
+"""!
+\brief Class for frequency prefix tree automataa
 
-Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>
+\details Class providing operations for frequency prefix tree automata
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
+\copyright
+    Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
 """
 
 import learning.ffa as ffa
@@ -25,13 +27,27 @@ from collections import defaultdict
 
 
 class FPT(dffa.DFFA):
+    """!
+    Frequency prefix tree (FPT)
+    """
 
     def __init__(self, states, trans, ini, fin):
+        """!
+        Constructor
+
+        @param states: States of the DFFA
+        @param trans: Transitions of the DFFA
+        @param ini: Initial states
+        @param fin: Final states
+        """
         super(FPT, self).__init__(states, trans, ini, fin)
         self.flanguages = defaultdict(lambda: defaultdict(lambda: 0))
 
 
     def __init__(self):
+        """!
+        Default constructor
+        """
         rt = tuple([])
         ini = defaultdict(lambda: 0)
         ini[rt] = 0
@@ -40,13 +56,21 @@ class FPT(dffa.DFFA):
 
 
     def __str__(self):
+        """!
+        Convert to a string representation
+        """
         return self.show()
 
 
-    """
-    Partition given set to equivalent classes according to a relation
-    """
     def _partition_set(self, st, mp):
+        """!
+        Partition given set to equivalent classes according to a relation
+
+        @param st: Set of states
+        @param mp: Relation
+
+        @return: Partitioning of the set st
+        """
         act = []
         for item in st:
             found = False
@@ -60,10 +84,10 @@ class FPT(dffa.DFFA):
         return [set(u) for u in act]
 
 
-    """
-    Normalize flanguages for each state
-    """
     def _normalize_flanguages(self):
+        """!
+        Normalize flanguages for each state
+        """
         for st in self._states:
             s = sum(self.flanguages[st].values())
             nd = {}
@@ -73,6 +97,11 @@ class FPT(dffa.DFFA):
 
 
     def show(self):
+        """!
+        Convert the FPT to a string representation
+
+        @return String representation of the FPT
+        """
         ret = str()
         ret += "Initials: \n"
         for state, weight in self._ini.items():
@@ -88,6 +117,13 @@ class FPT(dffa.DFFA):
 
 
     def _create_branch(self, state, string, label):
+        """!
+        Create new branch in the FPT for the string string
+
+        @param state: First state
+        @param string: String to be added to the FPT
+        @param label: Label of the new added string
+        """
         act = state
         dest = None
         for i in range(len(string)):
@@ -99,10 +135,12 @@ class FPT(dffa.DFFA):
         self._fin[act] = self._fin[act] + 1
 
 
-    """
-    Get leaves (states without outgoing transitions)
-    """
     def get_leaves(self):
+        """!
+        Get leaves (states without outgoing transitions)
+
+        @return Set of leaves
+        """
         lv = set()
         for st in self.get_states():
             if len(self.successors(st)) == 0:
@@ -110,11 +148,10 @@ class FPT(dffa.DFFA):
         return lv
 
 
-
-    """
-    Merge equivalent backward deterministic states
-    """
     def suffix_minimize(self):
+        """!
+        Merge equivalent backward deterministic states
+        """
         inv = self.inverse_ffa()
         fin = self._fin.keys()
 
@@ -124,11 +161,14 @@ class FPT(dffa.DFFA):
         self.merge_states(self.get_leaves())
 
 
-
-    """
-    Count edges with labels corresponding to label
-    """
     def count_label_edges(self, label):
+        """!
+        Count edges with labels corresponding to label
+
+        @param label: Label of an edge
+
+        @return Number of edge labelled by label
+        """
         cnt = 0
         for tr in self.get_transition_list():
             if tr.label == label:
@@ -136,10 +176,13 @@ class FPT(dffa.DFFA):
         return cnt
 
 
-    """
-    Add string to frequency prefix tree
-    """
     def add_string(self, string, label=0):
+        """!
+        Add string to the frequency prefix tree
+
+        @param string: String to be added to the FPT
+        @param label: Label of the new added string
+        """
         act = self._root
         self._ini[act] = self._ini[act] + 1
         for i in range(len(string)):
@@ -157,5 +200,11 @@ class FPT(dffa.DFFA):
 
 
     def add_string_list(self, lst, label=0):
+        """!
+        Add a list of strings to frequency prefix tree
+
+        @param lst: List of strings to be added to the FPT
+        @param label: Label of the new added string
+        """
         for item in lst:
             self.add_string(item, label)
