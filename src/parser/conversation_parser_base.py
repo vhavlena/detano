@@ -1,67 +1,83 @@
 #!/usr/bin/env python3
 
-"""
-Dividing list of messages into conversations -- base class.
+"""!
+\brief Dividing list of messages into conversations -- base class.
 
-Copyright (C) 2021  Vojtech Havlena, <ihavlena@fit.vutbr.cz>
+\details
+    Base class providing interface for conversation parsers (from the input
+    list of messages).
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
+\copyright
+    Copyright (C) 2020  Vojtech Havlena, <ihavlena@fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
 """
 
 from abc import ABC, abstractmethod
 
 class ConvParserBase(ABC):
+    """!
+    Base class for parsing conversations
+    """
 
-    """
-    Parse and store all conversations
-    """
+
     @abstractmethod
     def parse_conversations(self):
+        """!
+        Parse and store all conversations
+        """
         pass
 
 
-    """
-    Get all conversations (possibly projected by abstraction)
-    """
     @abstractmethod
     def get_all_conversations(self, proj=None):
+        """!
+        Get all conversations (possibly projected by abstraction)
+
+        @param proj: Projection applied on data
+
+        @return List of all conversations
+        """
         pass
 
 
-    """
-    Get a following conversation from a list of messages. It implements just a
-    couple of cases (definitely not all of them)
-    """
     @abstractmethod
     def get_conversation(self):
+        """!
+        Get a following conversation from a list of messages. It implements just a
+        couple of cases (definitely not all of them)
+
+        @return Next conversation
+        """
         pass
 
 
-    """
-    Split input according to the communication pairs.
-    @return List of ConvParserBase (or derived)
-    """
     @abstractmethod
     def split_communication_pairs(self):
+        """!
+        Split input according to the communication pairs.
+
+        @return List of ConvParserBase (or derived)
+        """
         pass
 
 
-    """
-    Split input according to time windows
-    @param dur Time duration
-    @return List of ConvParserBase (or derived)
-    """
     @abstractmethod
     def split_to_windows(self, dur):
+        """!
+        Split input according to time windows
+
+        @param dur: Time duration
+        @return List of ConvParserBase (or derived)
+        """
         pass
