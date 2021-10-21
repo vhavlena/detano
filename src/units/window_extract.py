@@ -33,7 +33,6 @@ from enum import Enum
 import learning.fpt as fpt
 import learning.alergia as alergia
 import parser.core_parser as core_parser
-import parser.wfa_parser as wfa_parser
 import wfa.core_wfa_export as core_wfa_export
 import wfa.matrix_wfa as matrix_wfa
 import parser.IEC104_parser as con_par
