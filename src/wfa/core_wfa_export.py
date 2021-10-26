@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 
-"""
-Tool for approximate reductions of finite automata used in network traffic
-monitoring. Taken and modified from https://github.com/vhavlena/appreal
+"""!
+\brief Class for exporting WFAs in a textual format
 
-Copyright (C) 2017  Vojtech Havlena, <xhavle03@stud.fit.vutbr.cz>
+\details
+    Class providing exporting a WFA into FA or DOT format. Taken and modified
+    from <https://github.com/vhavlena/appreal>
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
+\copyright
+    Copyright (C) 2017  Vojtech Havlena, <xhavle03@stud.fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
 """
 
 import wfa.aux_functions as aux
@@ -25,20 +28,34 @@ import FAdo.fa
 import wfa.wfa_exceptions as wfa_exceptions
 import wfa.core_wfa as core_wfa
 
-#Precise of float numbers (for output)
+## Precise of float numbers (for output)
 PRECISE = 3
-#Max number of symbols on transition (DOT format)
+## Max number of symbols on transition (DOT format)
 SYMBOLS = 25
 
 class CoreWFAExport(core_wfa.CoreWFA):
+    """!
+    Class for exporting WFAs to a text format
+    """
+
     def __init__(self, transitions=None, finals=None, start=None, alphabet=None):
+        """!
+        Constructor
+
+        @param transitions: Transitions
+        @param finals: Final states with weights
+        @param start: Initial state
+        @param alphabet: Alphabet
+        """
         super(CoreWFAExport, self).__init__(transitions, finals, start, alphabet)
 
+
     def get_aggregated_transitions(self):
-        """Get aggregated transitions (merging transitions which differs
+        """!
+        Get aggregated transitions (merging transitions which differs
         only on symbol into a transition labeled with the list of symbols).
 
-        Return: List(Transitions).
+        @return List of aggregated ransitions.
         """
         aggregate = dict()
         for transition in self._transitions:
@@ -52,13 +69,17 @@ class CoreWFAExport(core_wfa.CoreWFA):
                     += float(transition.weight)
         return aggregate
 
+
     def to_dot(self, aggregate=True, state_label=None, legend=None):
-        """Convert the WFA to dot format (for graphical visualization). Use
+        """!
+        Convert the WFA to dot format (for graphical visualization). Use
         aggregation of transitions between same states.
 
-        Return: String (DOT format)
-        Keyword arguments:
-        state_label -- label of each state (shown inside of the state)
+        @param aggregate: Aggregate transitions between two states
+        @param state_label: label of each state (shown inside of the state)
+        @param legend: Optional legend to be part of the DOT automaton
+
+        @return String (DOT, Graphwiz format)
         """
         dot = str()
         dot += "digraph \" Automat \" {\n    rankdir=LR;\n"
@@ -112,6 +133,16 @@ class CoreWFAExport(core_wfa.CoreWFA):
 
 
     def _print_transition(self, src, dest, sym, weight):
+        """!
+        Print a single transition.
+
+        @param src: Source state
+        @param dest: Destination state
+        @param sym: Symbol
+        @param weight: Weight of the transition
+
+        @return Transition in DOT format
+        """
         dot = str()
         dot += "\"" + str(src) + "\""
         dot += " -> "
@@ -122,11 +153,13 @@ class CoreWFAExport(core_wfa.CoreWFA):
 
 
     def to_fa_format(self, initial=False, alphabet=False):
-        """Converts automaton to FA format (WFA version).
+        """!
+        Converts automaton to FA format (WFA version).
 
-        Return: String (WFA in the FA format)
-        Keyword arguments:
-        alphabet -- whether show explicitly symbols from alphabet.
+        @param initial: Explicitly print the initial state
+        @param alphabet: Whether show explicitly symbols from alphabet.
+
+        @return String (WFA in the FA format)
         """
         if len(self._start) != 1:
             raise wfa_exceptions.WFAOperationException("Only WFA with a single initial state can be converted to FA format.")
@@ -148,12 +181,13 @@ class CoreWFAExport(core_wfa.CoreWFA):
 
 
     def _format_label(self, sym, weight):
-        """Format label for DOT converting.
+        """!
+        Format label for DOT converting.
 
-        Return: String (formatted label)
-        Keyword arguments:
-        sym -- List of symbols
-        weight -- Weight of the transition.
+        @param sym: List of symbols
+        @param weight: Weight of the transition.
+
+        @return String (formatted label in the DOT format)
         """
         max_symbols = SYMBOLS
 

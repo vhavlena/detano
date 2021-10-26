@@ -1,23 +1,28 @@
 #!/usr/bin/python
 
-"""
-Tool for approximate reductions of finite automata used in network traffic
-monitoring. Taken and modified from https://github.com/vhavlena/appreal
+"""!
+\brief Class for working with a computation of language weights
 
-Copyright (C) 2017  Vojtech Havlena, <xhavle03@stud.fit.vutbr.cz>
+\details
+    Class providing support for a computation of weight of the language
+    (specified by the WFA). Inmplements various methods and approaches for
+    transition closure computation. Taken and modified from
+    <https://github.com/vhavlena/appreal>
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or
-(at your option) any later version.
+\author Vojtěch Havlena
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License.
-If not, see <http://www.gnu.org/licenses/>.
+\copyright
+    Copyright (C) 2017  Vojtech Havlena, <xhavle03@stud.fit.vutbr.cz>\n
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.\n
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.\n
+    You should have received a copy of the GNU General Public License.
+    If not, see <http://www.gnu.org/licenses/>.
 """
 
 import numpy
@@ -27,38 +32,73 @@ import wfa.core_wfa as core_wfa
 import warnings
 from scipy.sparse import SparseEfficiencyWarning
 
+## Threshold for sparse matrices
 THRESHOLD = 0.0
 
+## Ignore a particular warning
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 class ClosureMode(object):
-    """Implemented methods for computing the closure.
+    """!
+    Implemented methods for computing the closure.
     """
+
+    ## Use matrix inversion
     inverse = 1
-    iterations = 2 #Iterative matrix multiplication.
+    ## Iterative matrix multiplication.
+    iterations = 2
+    ## Hotteling-Bodeqig algorithm
     hotelling_bodewig = 3
 
 class MatrixWFAOperationException(Exception):
-    """Exception for invalid operations and errors during computing.
+    """!
+    Exception for invalid operations and errors during the closure computing.
     """
+
     def __init__(self, msg):
+        """!
+        Constructor
+
+        @param msg: Error message
+        """
         super(MatrixWFAOperationException, self).__init__()
         self.msg = msg
 
+
     def __str__(self):
+        """!
+        Convert to string
+
+        @return Error message
+        """
         return self.msg
 
+
+
 class MatrixWFA(core_wfa.CoreWFA):
-    """Class for matrix operations with WFAs involving matrix operations.
+    """!
+    Class for matrix operations with WFAs involving matrix operations.
     """
+
+
     def __init__(self, transitions=None, finals=None, start=None, alphabet=None):
+        """!
+        Constructor
+
+        @param transitions: Transitions
+        @param finals: Final states with weights
+        @param start: Initial state
+        @param alphabet: Alphabet
+        """
         super(MatrixWFA, self).__init__(transitions, finals, start, alphabet)
 
+
     def are_states_compatible(self):
-        """Check whether the states of the WFA are compatible with matrix
+        """!
+        Check whether the states of the WFA are compatible with matrix
         operations (states are labeled with consequtive numbers from 0 to n-1).
 
-        Return: Bool
+        @return Compatibility of states
         """
         states = super(MatrixWFA, self).get_states()
 
@@ -73,10 +113,14 @@ class MatrixWFA(core_wfa.CoreWFA):
 
         return True
 
-    def get_transition_matrix(self, sparse=False):
-        """Get a transition matrix corresponding to the WFA.
 
-        Return: Numpy.matrix (transition matrix)
+    def get_transition_matrix(self, sparse=False):
+        """!
+        Get a transition matrix corresponding to the WFA.
+
+        @param sparse: Use sparse matrices
+
+        @return Transition matrix (Numpy.matrix)
         """
         if not self.are_states_compatible():
             raise MatrixWFAOperationException("States must be renamed to the set {0,...,n}")
@@ -94,10 +138,12 @@ class MatrixWFA(core_wfa.CoreWFA):
 
         return mtx
 
-    def _get_transition_matrix_sparse(self):
-        """Get CSR representation of the transition matrix.
 
-        Return: scipy.sparse.csr_matrix
+    def _get_transition_matrix_sparse(self):
+        """!
+        Get CSR representation of the transition matrix.
+
+        @return Sparse matrix representation (scipy.sparse.csr_matrix)
         """
         if not self.are_states_compatible():
             raise MatrixWFAOperationException("States must be renamed to the set {0,...,n}")
@@ -130,9 +176,12 @@ class MatrixWFA(core_wfa.CoreWFA):
 
 
     def get_final_vector(self, sparse=False):
-        """Get a vector with final weights corresponding to the WFA.
+        """!
+        Get a vector with final weights corresponding to the WFA.
 
-        Return: Numpy.matrix (final vector).
+        @param sparse: Use sparse matrices
+
+        @return Final vector (Numpy.matrix)
         """
         if not self.are_states_compatible():
             raise MatrixWFAOperationException("States must be renamed to the set {0,...,n}")
@@ -148,11 +197,15 @@ class MatrixWFA(core_wfa.CoreWFA):
         else:
             return mtx
 
-    def get_final_ones(self, sparse=False):
-        """Get a vector with items 1.0 corresponding to final states (other
-        states are set to 0).
 
-        Return: Numpy.matrix (final states are set to one).
+    def get_final_ones(self, sparse=False):
+        """!
+        Get a vector with items 1.0 corresponding to final states (other states
+        are set to 0).
+
+        @param sparse: Use sparse matrices
+
+        @return Numpy.matrix (final states are set to one).
         """
         if not self.are_states_compatible():
             raise MatrixWFAOperationException("States must be renamed to the set {0,...,n}")
@@ -172,10 +225,14 @@ class MatrixWFA(core_wfa.CoreWFA):
         else:
             return mtx
 
-    def get_initial_vector(self, sparse=False):
-        """Get a vector of initial weights.
 
-        Return: Numpy.matrix (of initial weights).
+    def get_initial_vector(self, sparse=False):
+        """!
+        Get a vector of initial weights.
+
+        @param sparse: Use sparse matrices
+
+        @return Vector of initial weights (Numpy.matrix).
         """
         if not self.are_states_compatible():
             raise MatrixWFAOperationException("States must be renamed to the set {0,...,n}")
@@ -191,14 +248,17 @@ class MatrixWFA(core_wfa.CoreWFA):
         else:
             return mtx
 
+
     @staticmethod
     def _get_sparse_inverse(mtx, num_states):
-        """Get inversion of the sparse matrix. The matrix inversion is
-        computed using LU decomposition.
+        """!
+        Get inversion of the sparse matrix. The matrix inversion is computed
+        using LU decomposition.
 
-        Return: scipy.sparse.csr_matrix
-        Keyword arguments:
-        num_states -- Matrix dimension (number of states).
+        @param mtx: Matrix
+        @param num_states: Matrix dimension (number of states).
+
+        @return Sparse matrix inversion (scipy.sparse.csr_matrix)
         """
         lu_obj = scipy.sparse.linalg.splu(mtx)
         nonzeros = []
@@ -225,15 +285,18 @@ class MatrixWFA(core_wfa.CoreWFA):
         ret = scipy.sparse.csr_matrix((nonzeros, columns, row_num), shape=(num_states, num_states), dtype=numpy.float64)
         return ret.transpose()
 
+
     def compute_transition_closure(self, closure_mode, sparse=False, iterations=0, debug=False):
-        """Compute transition closure by a specified method (assume that the
+        """!
+        Compute transition closure by a specified method (assume that the
         conditions for given method are met).
 
-        Return: Numpy.matrix (transition closure).
-        Keyword arguments:
-        closure_mode -- Method for computing the transition closure (ClosureMode).
-        iterations -- Maximum number of iteration (in the case of iterative methods).
-        debug -- Show debug info.
+        @param closure_mode: Method for computing the transition closure (ClosureMode).
+        @param sparse: Use sparse matrices
+        @param iterations: Maximum number of iteration (in the case of iterative methods).
+        @param debug: Show debug info.
+
+        @return Transition closure (Numpy.matrix)
         """
         if len(super(MatrixWFA, self).get_states()) == 0:
             return None
@@ -292,13 +355,15 @@ class MatrixWFA(core_wfa.CoreWFA):
 
     #TODO: Merge the following two methods
     def compute_language_probability(self, closure_mode, sparse=False, iterations=0, debug=False):
-        """Compute the total probability of the WFA.
+        """!
+        Compute the total probability of the WFA's language.
 
-        Return: String (DOF format)
-        Keyword arguments:
-        closure_mode -- Method for computing the transition closure (ClosureMode).
-        iterations -- Maximum number of iteration (in the case of iterative methods).
-        debug -- Show debug info.
+        @param closure_mode: Method for computing the transition closure (ClosureMode).
+        @param sparse: Use sparse matrices
+        @param iterations: Maximum number of iteration (in the case of iterative methods).
+        @param debug: Show debug info.
+
+        @return Weight of the language (float)
         """
         if len(super(MatrixWFA, self).get_states()) == 0:
             return 0.0
