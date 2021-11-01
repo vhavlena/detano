@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""
+"""!
 \brief Core class for working with WFAs
 
 \details
