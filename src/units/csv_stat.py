@@ -31,6 +31,12 @@ import parser.IEC104_parser as con_par
 rows_filters = [["srcIP", "srcPort"], ["dstIP", "dstPort"]]
 DELIMITER = ";"
 
+"""
+Abstraction on messages
+"""
+def abstraction(item):
+    return tuple([item[k] for k in rows_filter])
+
 def main():
     argc = len(sys.argv)
     if argc != 2:
@@ -42,6 +48,10 @@ def main():
     csv_fd = open(csv_file, "r")
 
     normal_msgs = con_par.get_messages(csv_fd)
+    parser = con_par.IEC104Parser(normal_msgs)
+    parser.parse_conversations()
+    lines = parser.get_all_conversations()
+
     distict_set = set()
     inform_cnt = 0
     all_cnt = 0
@@ -57,6 +67,7 @@ def main():
     print("#i-messages: {0}".format(inform_cnt))
     print("#entities: {0}".format(len(distict_set)))
     print("entities: {0}".format(distict_set))
+    print("#conversations: {0}".format(len(lines)))
 
     csv_fd.close()
 
