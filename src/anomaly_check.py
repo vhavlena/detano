@@ -38,6 +38,7 @@ import wfa.matrix_wfa as matrix_wfa
 import parser.IEC104_parser as con_par
 import detection.distr_comparison as distr
 import detection.member as mem
+import parser.IEC104_conv_parser as iec_prep_par
 
 SPARSE = False
 
@@ -61,6 +62,10 @@ class AutType(Enum):
     PTA = 1
 
 
+class InputFormat(Enum):
+    IPFIX = 0
+    CONV = 1
+
 """
 Program parameters
 """
@@ -72,6 +77,7 @@ class Params:
     aut_type : AutType
     reduced : float
     smoothing : bool
+    format : InputFormat
 
 
 """
@@ -182,14 +188,14 @@ def main():
     #     sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hr:t:a:s", ["help", "reduced=", "atype=", "alg=", "smoothing"])
+        opts, args = getopt.getopt(sys.argv[1:], "hr:t:a:sf:", ["help", "reduced=", "atype=", "alg=", "smoothing", "format="])
         if len(args) > 1:
-            opts, _ = getopt.getopt(sys.argv[3:], "hr:t:a:s", ["help", "reduced=", "atype=", "alg=", "smoothing"])
+            opts, _ = getopt.getopt(sys.argv[3:], "hr:t:a:sf:", ["help", "reduced=", "atype=", "alg=", "smoothing", "format="])
     except getopt.GetoptError as err:
         sys.stderr.write("Error: bad parameters (try --help)\n")
         sys.exit(1)
 
-    par = Params(Algorithms.DISTR, None, None, AutType.PA, None, False)
+    par = Params(Algorithms.DISTR, None, None, AutType.PA, None, False, InputFormat.CONV)
     learn_proc = learn_proc_pa
     golden_proc = learn_golden_distr
 
@@ -215,6 +221,11 @@ def main():
             sys.exit()
         elif o in ("-r", "--reduced"):
             par.reduced = float(a)
+        elif o in ("-f", "--format"):
+            if a == "conv":
+                par.file_format = InputFormat.CONV
+            elif a == "ipfix":
+                par.file_format = InputFormat.IPFIX
         else:
             sys.stderr.write("Error: bad parameters (try --help)\n")
             sys.exit(1)
@@ -236,8 +247,13 @@ def main():
         sys.stderr.write("Cannot open input files\n")
         sys.exit(1)
 
-    normal_parser = con_par.IEC104Parser(normal_msgs)
-    test_parser = con_par.IEC104Parser(test_msgs)
+    if par.file_format == InputFormat.IPFIX:
+        normal_parser = con_par.IEC104Parser(normal_msgs)
+        test_parser = con_par.IEC104Parser(test_msgs)
+    elif par.file_format == InputFormat.CONV:
+        normal_parser = iec_prep_par.IEC104ConvParser(normal_msgs)
+        test_parser = iec_prep_par.IEC104ConvParser(test_msgs)
+
     try:
         golden_map = golden_proc(normal_parser, learn_proc, par)
     except KeyError as e:
@@ -268,7 +284,7 @@ def main():
     #Printing results
     print("{0} {1}".format(par.normal_file, par.test_file))
     for k, v in res.items():
-        print(ent_format(k))
+        print("\n"+ent_format(k))
 
         if par.alg == Algorithms.DISTR:
             for i in range(len(v)):

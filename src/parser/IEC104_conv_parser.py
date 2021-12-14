@@ -100,7 +100,7 @@ class IEC104ConvParser(par.ConvParserBase):
         ret = []
         lst = data.split(",")
         for it in lst:
-            m = re.match(r"\<([0-9]+)\.([0-9]+)\>", it)
+            m = re.match(r"\<([0-9]+)\.(([0-9]+|n))\>", it)
             ret.append((m.group(1), m.group(2)))
         return ret
 
@@ -128,7 +128,23 @@ class IEC104ConvParser(par.ConvParserBase):
 
         @return List of intances of IEC104ConvParser each for one communication pair
         """
-        pass
+        dct_spl = defaultdict(lambda: [])
+
+        actId = None
+        for item in self.input:
+            if item["Timestamp"] == "Key":
+                val = item["Relative Time"].strip().split("-")
+                if len(val) != 2:
+                    raise Exception("Bad format of communication pair")
+                source = val[0].split(":")
+                dest = val[1].split(":")
+                actId = frozenset([(source[1], source[0]), (dest[0], dest[1])])
+            else:
+                dct_spl[actId].append(item)
+        ret = []
+        for k, v in dct_spl.items():
+            ret.append(IEC104ConvParser(v, k))
+        return ret
 
 
     def split_to_windows(self, dur):
@@ -137,4 +153,14 @@ class IEC104ConvParser(par.ConvParserBase):
 
         @return List of intances of IEC104ConvParser each for one window
         """
-        pass
+        chunks = defaultdict(lambda: [])
+        for item in self.input:
+            chunks[int(float(item["Relative Time"])/dur)].append(item)
+
+        if len(chunks) == 0:
+            return []
+        m = max(list(chunks.keys())) + 1
+        ret = []
+        for i in range(m):
+            ret.append(IEC104ConvParser(chunks[i], self.compair))
+        return ret

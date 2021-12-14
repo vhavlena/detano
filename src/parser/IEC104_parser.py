@@ -321,7 +321,7 @@ class IEC104Parser(par.ConvParserBase):
 
         if len(chunks) == 0:
             return []
-        m = max(list(chunks.keys()))
+        m = max(list(chunks.keys())) + 1
         ret = []
         for i in range(m):
             ret.append(IEC104Parser(chunks[i], self.compair))
