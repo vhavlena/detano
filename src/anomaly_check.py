@@ -77,7 +77,7 @@ class Params:
     aut_type : AutType
     reduced : float
     smoothing : bool
-    format : InputFormat
+    file_format : InputFormat
 
 
 """
@@ -195,7 +195,7 @@ def main():
         sys.stderr.write("Error: bad parameters (try --help)\n")
         sys.exit(1)
 
-    par = Params(Algorithms.DISTR, None, None, AutType.PA, None, False, InputFormat.CONV)
+    par = Params(Algorithms.DISTR, None, None, AutType.PA, None, False, InputFormat.IPFIX)
     learn_proc = learn_proc_pa
     golden_proc = learn_golden_distr
 
