@@ -78,6 +78,7 @@ class Params:
     reduced : float
     smoothing : bool
     file_format : InputFormat
+    threshold : float
 
 
 """
@@ -120,6 +121,10 @@ Communication entity string format
 def ent_format(k):
     [(fip, fp), (sip, sp)] = list(k)
     return "{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp)
+
+
+def conv_list_format(l):
+    return "\n".join([str(elem) for elem in l])
 
 
 """
@@ -176,6 +181,7 @@ def print_help():
     print("\t--alg=distr/member\tanomaly detection based on comparing distributions (distr) or single message reasoning (member) (default distr)")
     print("\t--smoothing\t\tuse smoothing (for distr only)")
     print("\t--reduced=val\t\tremove similar automata with the error upper-bound val [0,1] (for distr only)")
+    print("\t--threshold=val\t\tdetect anomalies with a given threshold (for distr only)")
     print("\t--help\t\t\tprint this message")
 
 
@@ -188,14 +194,14 @@ def main():
     #     sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hr:t:a:sf:", ["help", "reduced=", "atype=", "alg=", "smoothing", "format="])
+        opts, args = getopt.getopt(sys.argv[1:], "hr:t:a:sf:", ["help", "reduced=", "atype=", "alg=", "smoothing", "format=", "threshold="])
         if len(args) > 1:
-            opts, _ = getopt.getopt(sys.argv[3:], "hr:t:a:sf:", ["help", "reduced=", "atype=", "alg=", "smoothing", "format="])
+            opts, _ = getopt.getopt(sys.argv[3:], "hr:t:a:sf:", ["help", "reduced=", "atype=", "alg=", "smoothing", "format=", "threshold="])
     except getopt.GetoptError as err:
         sys.stderr.write("Error: bad parameters (try --help)\n")
         sys.exit(1)
 
-    par = Params(Algorithms.DISTR, None, None, AutType.PA, None, False, InputFormat.IPFIX)
+    par = Params(Algorithms.DISTR, None, None, AutType.PA, None, False, InputFormat.IPFIX, None)
     learn_proc = learn_proc_pa
     golden_proc = learn_golden_distr
 
@@ -214,6 +220,8 @@ def main():
             elif a == "member":
                 par.alg = Algorithms.MEMBER
                 golden_proc = learn_golden_member
+        elif o in ("--threshold"):
+            par.threshold = float(a)
         elif o == "--smoothing":
             par.smoothing = True
         elif o in ("-h", "--help"):
@@ -272,13 +280,24 @@ def main():
     elif par.alg == Algorithms.MEMBER:
         anom = mem.AnomMember(golden_map, learn_proc)
 
+
+    anomalies = defaultdict(lambda: dict())
+    if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
+        golden_map_member = learn_golden_member(normal_parser, learn_proc, par)
+        anom_member = mem.AnomMember(golden_map_member, learn_proc)
     res = defaultdict(lambda: [])
     test_com = test_parser.split_communication_pairs()
     for item in test_com:
+        cnt = 0
         for window in item.split_to_windows(DURATION):
             window.parse_conversations()
             r = anom.detect(window.get_all_conversations(abstraction), item.compair)
             res[item.compair].append(r)
+            if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
+                if min(r) > par.threshold:
+                    r = anom_member.detect(window.get_all_conversations(abstraction), item.compair)
+                    anomalies[item.compair][cnt] = r[0]
+            cnt += 1
 
     print("Detection results: ")
     #Printing results
@@ -295,6 +314,14 @@ def main():
         elif par.alg == Algorithms.MEMBER:
             for i in range(len(v)):
                 print("{0};{1}".format(i, [ it for its in v[i] for it in its ]))
+
+    if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
+        print("\nPossibly problematic conversations: ")
+        for ent, windows in anomalies.items():
+            for i, conv in windows.items():
+                print("Communicating: {0}; Window: {1}".format(ent_format(ent), i))
+                print(conv_list_format(conv))
+                print()
 
 
 if __name__ == "__main__":
