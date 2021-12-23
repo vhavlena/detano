@@ -135,10 +135,14 @@ class IEC104ConvParser(par.ConvParserBase):
             if item["Timestamp"] == "Key":
                 val = item["Relative Time"].strip().split("-")
                 if len(val) != 2:
-                    raise Exception("Bad format of communication pair")
-                source = val[0].split(":")
-                dest = val[1].split(":")
-                actId = frozenset([(source[1], source[0]), (dest[0], dest[1])])
+                    if len(val) == 4:
+                        actId = frozenset([(val[0], val[2]), (val[1], val[3])])
+                    else:
+                        raise Exception("Bad format of communication pair")
+                else:
+                    source = val[0].split(":")
+                    dest = val[1].split(":")
+                    actId = frozenset([(source[1], source[0]), (dest[0], dest[1])])
             else:
                 dct_spl[actId].append(item)
         ret = []
