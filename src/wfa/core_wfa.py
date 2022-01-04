@@ -29,14 +29,21 @@ import bidict
 import math
 import wfa.wfa_exceptions as wfa_exceptions
 
+from typing import List, Optional, Set, TypeVar, Generic, Callable
 from collections import deque
 
-class Transition(object):
+StateType = TypeVar("StateType")
+SymbolType = TypeVar("SymbolType")
+StateFloatMapType = dict[StateType, float]
+StateFloatMapOptType = Optional[dict[StateType, float]]
+TransFunctionType = dict[StateType, dict[SymbolType, Set[StateType]]]
+
+class Transition(Generic[StateType, SymbolType]):
     """!
     Class for the represention of a WFA transition.
     """
 
-    def __init__(self, src, dest, sym, weight):
+    def __init__(self, src: StateType, dest: StateType, sym: SymbolType, weight: float):
         """!
         Constructor
 
@@ -52,7 +59,7 @@ class Transition(object):
         self.count = 0
 
 
-    def __str__(self):
+    def __str__(self) -> str:
         """!
         String representation
 
@@ -61,7 +68,7 @@ class Transition(object):
         return "({0}, {1}, {2}, {3})".format(self.src, self.dest, self.symbol, self.weight)
 
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """!
         String representation
 
@@ -70,7 +77,7 @@ class Transition(object):
         return self.__str__()
 
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """!
         Equality of two transitions
 
@@ -78,10 +85,12 @@ class Transition(object):
 
         @return True -- both transitions are equal
         """
+        if not isinstance(other, Transition):
+            raise NotImplementedError("__eq__ for this type of object is not defined")
         return (self.src == other.src) and (self.dest == other.dest) and (self.symbol == other.symbol) and (self.weight == other.weight)
 
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         """!
         Inequality of two transitions
 
@@ -101,12 +110,13 @@ class Transition(object):
         return hash((self.src, self.dest, self.symbol, self.weight))
 
 
-class CoreWFA(object):
+class CoreWFA(Generic[StateType, SymbolType]):
     """!
     Basic class for representation of WFA
     """
 
-    def __init__(self, transitions=None, finals=None, start=None, alphabet=None):
+
+    def __init__(self, transitions: List[Transition]=None, finals: StateFloatMapOptType=None, start: StateFloatMapType = dict(), alphabet: Optional[List[SymbolType]]=None):
         """!
         Constructor
 
@@ -115,23 +125,33 @@ class CoreWFA(object):
         @param start: Initial state
         @param alphabet: Alphabet
         """
-        self._transitions = transitions
-        if self._transitions == None:
+        self._transitions: List[Transition] = []
+        if transitions is None:
             self._transitions = []
-        self._finals = finals
-        if self._finals == None:
+        else:
+            self._transitions = transitions
+
+        self._finals: StateFloatMapType = dict()
+        if finals is None:
             self._finals = dict()
+        else:
+            self._finals = finals
+
+        # if start is None:
+        #     self._start = {0: 1.0}
+        # else:
         self._start = start
-        if self._start is None:
-            self._start = {0: 1.0}
         self._states_dict = None
-        self._alphabet = alphabet
+
+        self._alphabet: List[SymbolType] = []
         if alphabet is None:
             self._alphabet = self.get_alphabet()
-        self._states = self._get_states()
+        else:
+            self._alphabet = alphabet
+        self._states: List[StateType] = self._get_states()
 
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """!
         Equality of two WFAs
 
@@ -139,6 +159,8 @@ class CoreWFA(object):
 
         @return True -- both WFAs are equal
         """
+        if not isinstance(other, CoreWFA):
+            raise NotImplementedError("__eq__ for this type of object is not defined")
         return (self._transitions == other._transitions) and \
             (self._finals == other._finals) and \
             (self._start == other._start) and \
@@ -154,7 +176,7 @@ class CoreWFA(object):
         return hash((tuple(self._transitions), tuple(self._finals), tuple(self._start), tuple(self._alphabet)))
 
 
-    def get_transitions(self):
+    def get_transitions(self) -> List[Transition]:
         """!
         Get all transitions of the WFA.
 
@@ -163,15 +185,16 @@ class CoreWFA(object):
         return self._transitions
 
 
-    def set_all_finals(self):
+    def set_all_finals(self) -> None:
         """!
         Set all states to be final (all having the accepting weight 1.0)
         """
+        self._finals = dict()
         for st in self.get_states():
             self._finals[st] = 1.0
 
 
-    def get_finals(self):
+    def get_finals(self) -> StateFloatMapType:
         """!
         Get all final states of the WFA.
 
@@ -180,7 +203,7 @@ class CoreWFA(object):
         return self._finals
 
 
-    def set_finals(self, finals):
+    def set_finals(self, finals: StateFloatMapType) -> None:
         """!
         Set final states of the WFA.
 
@@ -189,7 +212,7 @@ class CoreWFA(object):
         self._finals = finals
 
 
-    def get_starts(self):
+    def get_starts(self) -> StateFloatMapType:
         """!
         Get the start state (only one start state is allowed).
 
@@ -198,7 +221,7 @@ class CoreWFA(object):
         return self._start
 
 
-    def set_starts(self, start):
+    def set_starts(self, start: StateFloatMapType):
         """!
         Set the initial state.
 
@@ -207,14 +230,14 @@ class CoreWFA(object):
         self._start = start
 
 
-    def get_alphabet(self):
+    def get_alphabet(self) -> List[SymbolType]:
         """!
         Get alphabet used by the WFA. If the alphabet is not explicitly
         given (in constructor), the alphabet is computed from the transitions.
 
         @return List of symbols.
         """
-        alph = []
+        alph: List[SymbolType] = []
         if self._alphabet != None:
             return self._alphabet
         for transition in self._transitions:
@@ -236,7 +259,7 @@ class CoreWFA(object):
             dct.inverse[x.symbol], x.weight), self._transitions))
 
 
-    def _get_states(self):
+    def _get_states(self) -> List[StateType]:
         """!
         Get all states of the WFA (the list of states is computed from the
         transitions).
@@ -260,7 +283,7 @@ class CoreWFA(object):
         return list(states)
 
 
-    def get_states(self):
+    def get_states(self) -> List[StateType]:
         """!
         Get all states of the WFA (the list of states is computed from the
         transitions).
@@ -270,7 +293,7 @@ class CoreWFA(object):
         return self._states
 
 
-    def get_rename_dict(self):
+    def get_rename_dict(self) -> Optional[dict[object, object]]:
         """!
         Get the dictionary containing original state labels and renamed state
         labels. The dictionary is created after method rename_states is invoked.
@@ -280,7 +303,7 @@ class CoreWFA(object):
         return self._states_dict
 
 
-    def get_single_dictionary_transitions(self):
+    def get_single_dictionary_transitions(self) -> dict[StateType, List[Transition]]:
         """!
         Get the transitions (ommiting transitions that differ only on the
         symbol) in the form of dictinary (for each state there is a list of
@@ -288,8 +311,8 @@ class CoreWFA(object):
 
         @return Dictionary assigning State -> List(Transitions)
         """
-        tr_dict = dict()
-        destinations = dict()
+        tr_dict: dict[StateType, List[Transition]] = dict()
+        destinations: dict[StateType, Set[StateType]] = dict()
 
         states = self.get_states()
         for st in states:
@@ -303,14 +326,14 @@ class CoreWFA(object):
         return tr_dict
 
 
-    def get_dictionary_transitions(self):
+    def get_dictionary_transitions(self) -> dict[StateType, List[Transition]]:
         """!
         Get transitions in the form of dictionary (for each state there is a
         list of transitions leading from this state).
 
         @return Dictionary assigning State -> List(Transitions)
         """
-        tr_dict = dict()
+        tr_dict: dict[StateType, List[Transition]] = dict()
 
         states = self.get_states()
         for st in states:
@@ -321,14 +344,14 @@ class CoreWFA(object):
         return tr_dict
 
 
-    def get_state_symbol_dict(self):
+    def get_state_symbol_dict(self) -> TransFunctionType:
         """!
         Get transitions in the form of dictionary (for each state there is a
         dictionary assigning to symbols a set of transitions)
 
         @return Dictionary assigning State -> (Dictionary: Symbol -> Set of transitions)
         """
-        tr_dict = dict()
+        tr_dict: TransFunctionType = dict()
 
         states = self.get_states()
         for st in states:
@@ -342,7 +365,7 @@ class CoreWFA(object):
         return tr_dict
 
 
-    def get_rev_transitions_aut(self):
+    def get_rev_transitions_aut(self) -> "CoreWFA":
         """!
         Get automaton with reversed directions of transitios.
 
@@ -394,7 +417,7 @@ class CoreWFA(object):
         self._states = self._get_states()
 
 
-    def product(self, aut):
+    def product(self, aut: "CoreWFA") -> "CoreWFA":
         """!
         Perform the product of two WFAs.
 
@@ -442,10 +465,10 @@ class CoreWFA(object):
                         queue.append(dest_state)
 
         alphabet = set(self.get_alphabet()) & set(aut.get_alphabet())
-        return CoreWFA(ret_transitions, ret_finals, ret_start, alphabet)
+        return CoreWFA(ret_transitions, ret_finals, ret_start, list(alphabet))
 
 
-    def breadth_first_search(self, state, visited, tr_dict):
+    def breadth_first_search(self, state: StateType, visited: Set[StateType], tr_dict: dict[StateType, List[Transition]]):
         """!
         BFS in the automaton graph.
 
@@ -467,7 +490,7 @@ class CoreWFA(object):
                     queue.append(transition.dest)
 
 
-    def get_coaccessible_states(self, tr_dict=None):
+    def get_coaccessible_states(self, tr_dict: Optional[dict[StateType, List[Transition]]]=None) -> Set[StateType]:
         """!
         Get coaccessible states of the WFA.
 
@@ -475,7 +498,7 @@ class CoreWFA(object):
 
         @return The list of coaccessible states.
         """
-        visited = set([])
+        visited: Set[StateType] = set([])
         reverse_aut = self.get_rev_transitions_aut()
         if tr_dict is None:
             tr_dict = reverse_aut.get_single_dictionary_transitions()
@@ -484,7 +507,7 @@ class CoreWFA(object):
         return visited
 
 
-    def get_accessible_states(self, tr_dict=None):
+    def get_accessible_states(self, tr_dict: Optional[dict[StateType, List[Transition]]]=None) -> Set[StateType]:
         """!
         Get accessible states of the WFA.
 
@@ -492,7 +515,7 @@ class CoreWFA(object):
 
         @return The list of accessible states.
         """
-        visited = set([])
+        visited: Set[StateType] = set([])
         if tr_dict is None:
             tr_dict = self.get_single_dictionary_transitions()
         for state, _ in self.get_starts().items():
@@ -500,7 +523,7 @@ class CoreWFA(object):
         return visited
 
 
-    def get_automata_restriction(self, states):
+    def get_automata_restriction(self, states: Set[StateType]) -> "CoreWFA":
         """!
         Get WFA restriction to only states in states.
 
@@ -535,7 +558,7 @@ class CoreWFA(object):
             rest_initials, alphabet)
 
 
-    def get_trim_automaton(self):
+    def get_trim_automaton(self) -> "CoreWFA":
         """!
         Get trimed WFA.
 
@@ -545,7 +568,7 @@ class CoreWFA(object):
         return self.get_automata_restriction(sts)
 
 
-    def get_predecessors(self, state):
+    def get_predecessors(self, state: StateType) -> Set[StateType]:
         """!
         Operation that finds predessors of the state state.
 
@@ -561,13 +584,13 @@ class CoreWFA(object):
         return ret
 
 
-    def get_predecessors_transitions(self):
+    def get_predecessors_transitions(self) -> dict[StateType, List[Transition]]:
         """!
         Get predecessors of all states of the WFA.
 
-        @return Dict: State -> Set(State)
+        @return Dict: State -> List(State)
         """
-        predecessors = {}
+        predecessors: dict[StateType, List[Transition]] = {}
         for state in self.get_states():
             predecessors[state] = []
 
@@ -577,7 +600,7 @@ class CoreWFA(object):
         return predecessors
 
 
-    def is_deterministic(self):
+    def is_deterministic(self) -> bool:
         """!
         Is the WFA deterministic
 
@@ -593,7 +616,7 @@ class CoreWFA(object):
         return True
 
 
-    def string_prob_deterministic(self, word):
+    def string_prob_deterministic(self, word: List[SymbolType]) -> Optional[float]:
         """!
         Compute the probability of the word word.
 
@@ -618,7 +641,7 @@ class CoreWFA(object):
         return prob
 
 
-    def map_symbols(self, fnc):
+    def map_symbols(self, fnc: Callable):
         """!
         Apply the function fnc on the symbols of all transitions
 

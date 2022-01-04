@@ -28,17 +28,25 @@ import FAdo.fa
 import wfa.wfa_exceptions as wfa_exceptions
 import wfa.core_wfa as core_wfa
 
+from typing import List, Optional, Set, TypeVar, Generic, Callable, Tuple, Union
+
+PrintSymbolType = Union[core_wfa.SymbolType, List[core_wfa.SymbolType]]
+
+# StateFloatMapType = dict[StateType, float]
+# StateFloatMapOptType = Optional[dict[StateType, float]]
+# TransFunctionType = dict[StateType, dict[SymbolType, Set[StateType]]]
+
 ## Precise of float numbers (for output)
 PRECISE = 3
 ## Max number of symbols on transition (DOT format)
 SYMBOLS = 25
 
-class CoreWFAExport(core_wfa.CoreWFA):
+class CoreWFAExport(core_wfa.CoreWFA[core_wfa.StateType, core_wfa.SymbolType]):
     """!
     Class for exporting WFAs to a text format
     """
 
-    def __init__(self, transitions=None, finals=None, start=None, alphabet=None):
+    def __init__(self, transitions: List[core_wfa.Transition]=None, finals: core_wfa.StateFloatMapOptType=None, start: core_wfa.StateFloatMapType = dict(), alphabet: Optional[List[core_wfa.SymbolType]]=None):
         """!
         Constructor
 
@@ -50,18 +58,18 @@ class CoreWFAExport(core_wfa.CoreWFA):
         super(CoreWFAExport, self).__init__(transitions, finals, start, alphabet)
 
 
-    def get_aggregated_transitions(self):
+    def get_aggregated_transitions(self) -> dict[Tuple[core_wfa.StateType, core_wfa.StateType], Tuple[List[core_wfa.SymbolType], float]]:
         """!
         Get aggregated transitions (merging transitions which differs
         only on symbol into a transition labeled with the list of symbols).
 
         @return List of aggregated ransitions.
         """
-        aggregate = dict()
+        aggregate: dict[Tuple[core_wfa.StateType, core_wfa.StateType], Tuple[List[core_wfa.SymbolType], float] ] = dict()
         for transition in self._transitions:
             if (transition.src, transition.dest) not in aggregate:
                 aggregate[(transition.src, transition.dest)] \
-                    = [[transition.symbol], transition.weight]
+                    = [transition.symbol], transition.weight
             else:
                 aggregate[(transition.src, transition.dest)][0]\
                     .append(transition.symbol)
@@ -70,7 +78,7 @@ class CoreWFAExport(core_wfa.CoreWFA):
         return aggregate
 
 
-    def to_dot(self, aggregate=True, state_label=None, legend=None):
+    def to_dot(self, aggregate: bool=True, state_label: Optional[dict[core_wfa.StateType, str]]=None, legend: str=None) -> str:
         """!
         Convert the WFA to dot format (for graphical visualization). Use
         aggregation of transitions between same states.
@@ -122,6 +130,9 @@ class CoreWFAExport(core_wfa.CoreWFA):
 
         #dot += "node [shape = circle];\n"
         if aggregate:
+            src: core_wfa.StateType
+            dest: core_wfa.StateType
+            res: Tuple[List[core_wfa.SymbolType], float]
             for (src, dest), res in self.get_aggregated_transitions().items():
                 dot += self._print_transition(src, dest, res[0], res[1])
         else:
@@ -132,7 +143,7 @@ class CoreWFAExport(core_wfa.CoreWFA):
         return dot
 
 
-    def _print_transition(self, src, dest, sym, weight):
+    def _print_transition(self, src: core_wfa.StateType, dest: core_wfa.StateType, sym: PrintSymbolType, weight: float) -> str:
         """!
         Print a single transition.
 
@@ -152,7 +163,7 @@ class CoreWFAExport(core_wfa.CoreWFA):
         return dot
 
 
-    def to_fa_format(self, initial=False, alphabet=False):
+    def to_fa_format(self, initial: bool=False, alphabet: bool=False) -> str:
         """!
         Converts automaton to FA format (WFA version).
 
@@ -180,7 +191,7 @@ class CoreWFAExport(core_wfa.CoreWFA):
         return fa
 
 
-    def _format_label(self, sym, weight):
+    def _format_label(self, sym: PrintSymbolType, weight: float) -> str:
         """!
         Format label for DOT converting.
 

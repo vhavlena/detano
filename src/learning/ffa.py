@@ -425,7 +425,7 @@ class FFA:
         return dot
 
 
-    def to_wfa(self):
+    def to_wfa(self) -> core_wfa_export.CoreWFAExport:
         """!
         Converts FFA to WFA (weighted finite automaton)
 

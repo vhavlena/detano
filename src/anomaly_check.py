@@ -31,11 +31,14 @@ from dataclasses import dataclass
 from collections import defaultdict
 from enum import Enum
 
+from typing import List, Tuple, FrozenSet, Callable, Union
+
 import learning.fpt as fpt
 import learning.alergia as alergia
 import wfa.core_wfa_export as core_wfa_export
 import wfa.matrix_wfa as matrix_wfa
 import parser.IEC104_parser as con_par
+import parser.conversation_parser_base as con_base
 import detection.distr_comparison as distr
 import detection.member as mem
 import parser.IEC104_conv_parser as iec_prep_par
@@ -45,6 +48,10 @@ SPARSE = False
 rows_filter_normal = ["asduType", "cot"]
 DURATION = 300
 AGGREGATE = True
+
+
+ComPairType = FrozenSet[Tuple[str,str]]
+AutListType = List[Union[core_wfa_export.CoreWFAExport,None]]
 
 """
 Program parameters
@@ -84,14 +91,14 @@ class Params:
 """
 Abstraction on messages
 """
-def abstraction(item):
+def abstraction(item: dict[str, str]) -> Tuple[str, ...]:
     return tuple([item[k] for k in rows_filter_normal])
 
 
 """
 PA learning
 """
-def learn_proc_pa(training):
+def learn_proc_pa(training: List) -> core_wfa_export.CoreWFAExport:
     tree = fpt.FPT()
     tree.add_string_list(training)
     alpha = 0.05
@@ -107,7 +114,7 @@ def learn_proc_pa(training):
 """
 PTA learning
 """
-def learn_proc_pta(training):
+def learn_proc_pta(training: List) -> core_wfa_export.CoreWFAExport:
     tree = fpt.FPT()
     tree.add_string_list(training)
     aut = tree
@@ -118,20 +125,23 @@ def learn_proc_pta(training):
 """
 Communication entity string format
 """
-def ent_format(k):
+def ent_format(k: ComPairType) -> str:
     [(fip, fp), (sip, sp)] = list(k)
     return "{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp)
 
 
-def conv_list_format(l):
+"""
+Convert a list of conversations into a string
+"""
+def conv_list_format(l: List) -> str:
     return "\n".join([str(elem) for elem in l])
 
 
 """
 Learn a golden model (for distr detection) from the given dataset
 """
-def learn_golden_distr(parser, learn_proc, par):
-    ret = defaultdict(lambda: [None])
+def learn_golden_distr(parser: con_base.ConvParserBase, learn_proc: Callable, par: Params) -> dict[ComPairType, AutListType]:
+    ret: dict[ComPairType, AutListType] = defaultdict(lambda: [None])
     parser_com = parser.split_communication_pairs()
 
     for item in parser_com:
@@ -157,8 +167,8 @@ def learn_golden_distr(parser, learn_proc, par):
 """
 Learn a golden model (for member detection) from the given dataset
 """
-def learn_golden_member(parser, learn_proc, par):
-    ret = defaultdict(lambda: [None])
+def learn_golden_member(parser: con_base.ConvParserBase, learn_proc: Callable, par: Params) -> dict[ComPairType, AutListType]:
+    ret: dict[ComPairType, AutListType] = defaultdict(lambda: [None])
     parser_com = parser.split_communication_pairs()
 
     for item in parser_com:
@@ -189,10 +199,6 @@ def print_help():
 Distribution-comparison-based anomaly detection
 """
 def main():
-    # if len(sys.argv) < 3:
-    #     sys.stderr.write("Error: bad parameters (try --help)\n")
-    #     sys.exit(1)
-
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hr:t:a:sf:", ["help", "reduced=", "atype=", "alg=", "smoothing", "format=", "threshold="])
         if len(args) > 1:

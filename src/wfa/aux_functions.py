@@ -23,7 +23,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 """
 
-def convert_to_pritable(dec, dot=False):
+def convert_to_pritable(dec: str, dot: bool=False) -> str:
     """!
     Convert string containing also non-printable characters to printable hexa
     number. Inspired by the Netbench tool.

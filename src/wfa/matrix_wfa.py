@@ -32,13 +32,23 @@ import wfa.core_wfa as core_wfa
 import warnings
 from scipy.sparse import SparseEfficiencyWarning
 
+from enum import Enum
+from typing import List, Optional, Set, TypeVar, Generic, Callable
+
+StateType = int
+SymbolType = TypeVar("SymbolType")
+StateFloatMapType = dict[StateType, float]
+StateFloatMapOptType = Optional[dict[StateType, float]]
+TransFunctionType = dict[StateType, dict[SymbolType, Set[StateType]]]
+
+
 ## Threshold for sparse matrices
 THRESHOLD = 0.0
 
 ## Ignore a particular warning
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
-class ClosureMode(object):
+class ClosureMode(Enum):
     """!
     Implemented methods for computing the closure.
     """
@@ -55,7 +65,7 @@ class MatrixWFAOperationException(Exception):
     Exception for invalid operations and errors during the closure computing.
     """
 
-    def __init__(self, msg):
+    def __init__(self, msg: str):
         """!
         Constructor
 
@@ -65,7 +75,7 @@ class MatrixWFAOperationException(Exception):
         self.msg = msg
 
 
-    def __str__(self):
+    def __str__(self) -> str:
         """!
         Convert to string
 
@@ -81,7 +91,7 @@ class MatrixWFA(core_wfa.CoreWFA):
     """
 
 
-    def __init__(self, transitions=None, finals=None, start=None, alphabet=None):
+    def __init__(self, transitions: List[core_wfa.Transition]=None, finals: StateFloatMapOptType=None, start: StateFloatMapType = dict(), alphabet: Optional[List[SymbolType]]=None):
         """!
         Constructor
 
@@ -93,7 +103,7 @@ class MatrixWFA(core_wfa.CoreWFA):
         super(MatrixWFA, self).__init__(transitions, finals, start, alphabet)
 
 
-    def are_states_compatible(self):
+    def are_states_compatible(self) -> bool:
         """!
         Check whether the states of the WFA are compatible with matrix
         operations (states are labeled with consequtive numbers from 0 to n-1).
@@ -114,7 +124,7 @@ class MatrixWFA(core_wfa.CoreWFA):
         return True
 
 
-    def get_transition_matrix(self, sparse=False):
+    def get_transition_matrix(self, sparse: bool=False) -> numpy.matrix:
         """!
         Get a transition matrix corresponding to the WFA.
 
@@ -139,7 +149,7 @@ class MatrixWFA(core_wfa.CoreWFA):
         return mtx
 
 
-    def _get_transition_matrix_sparse(self):
+    def _get_transition_matrix_sparse(self) -> numpy.matrix:
         """!
         Get CSR representation of the transition matrix.
 
@@ -156,7 +166,7 @@ class MatrixWFA(core_wfa.CoreWFA):
         row_num = [0]
 
         for state in range(num_states):
-            row = {}
+            row: dict[StateType, float] = {}
             for transition in tr_dict[state]:
                 try:
                     row[transition.dest] += transition.weight
@@ -175,7 +185,7 @@ class MatrixWFA(core_wfa.CoreWFA):
         return mtx
 
 
-    def get_final_vector(self, sparse=False):
+    def get_final_vector(self, sparse: bool=False) -> numpy.matrix:
         """!
         Get a vector with final weights corresponding to the WFA.
 
@@ -198,7 +208,7 @@ class MatrixWFA(core_wfa.CoreWFA):
             return mtx
 
 
-    def get_final_ones(self, sparse=False):
+    def get_final_ones(self, sparse: bool=False) -> numpy.matrix:
         """!
         Get a vector with items 1.0 corresponding to final states (other states
         are set to 0).
@@ -226,7 +236,7 @@ class MatrixWFA(core_wfa.CoreWFA):
             return mtx
 
 
-    def get_initial_vector(self, sparse=False):
+    def get_initial_vector(self, sparse: bool=False) -> numpy.matrix:
         """!
         Get a vector of initial weights.
 
@@ -250,7 +260,7 @@ class MatrixWFA(core_wfa.CoreWFA):
 
 
     @staticmethod
-    def _get_sparse_inverse(mtx, num_states):
+    def _get_sparse_inverse(mtx: numpy.matrix, num_states: int) -> numpy.matrix:
         """!
         Get inversion of the sparse matrix. The matrix inversion is computed
         using LU decomposition.
@@ -286,7 +296,7 @@ class MatrixWFA(core_wfa.CoreWFA):
         return ret.transpose()
 
 
-    def compute_transition_closure(self, closure_mode, sparse=False, iterations=0, debug=False):
+    def compute_transition_closure(self, closure_mode: ClosureMode, sparse: bool=False, iterations: int=0, debug: bool=False) -> numpy.matrix:
         """!
         Compute transition closure by a specified method (assume that the
         conditions for given method are met).
@@ -354,7 +364,7 @@ class MatrixWFA(core_wfa.CoreWFA):
         return result
 
     #TODO: Merge the following two methods
-    def compute_language_probability(self, closure_mode, sparse=False, iterations=0, debug=False):
+    def compute_language_probability(self, closure_mode: ClosureMode, sparse: bool=False, iterations: int=0, debug: bool=False) -> float:
         """!
         Compute the total probability of the WFA's language.
 

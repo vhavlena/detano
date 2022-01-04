@@ -41,7 +41,7 @@ class WFAOperationException(Exception):
     """
 
 
-    def __init__(self, msg, err_type=WFAErrorType.general_error):
+    def __init__(self, msg: str, err_type: WFAErrorType=WFAErrorType.general_error):
         """!
         Constructor
 
@@ -53,7 +53,7 @@ class WFAOperationException(Exception):
         self.err_type = err_type
 
 
-    def __str__(self):
+    def __str__(self) -> str:
         """!
         Convert to string
 
