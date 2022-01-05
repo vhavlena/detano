@@ -25,7 +25,14 @@
 
 from abc import ABC, abstractmethod
 
-class ConvParserBase(ABC):
+from typing import List, Dict, TypeVar, Generic, Optional, Callable, Type
+
+
+ItemType = TypeVar("ItemType")
+ConvBaseType = List[ItemType]
+
+
+class ConvParserBase(ABC, Generic[ItemType]):
     """!
     Base class for parsing conversations
     """
@@ -40,7 +47,7 @@ class ConvParserBase(ABC):
 
 
     @abstractmethod
-    def get_all_conversations(self, proj=None):
+    def get_all_conversations(self, proj: Optional[Callable]=None) -> List[ConvBaseType]:
         """!
         Get all conversations (possibly projected by abstraction)
 
@@ -52,7 +59,7 @@ class ConvParserBase(ABC):
 
 
     @abstractmethod
-    def get_conversation(self):
+    def get_conversation(self) -> Optional[ConvBaseType]:
         """!
         Get a following conversation from a list of messages. It implements just a
         couple of cases (definitely not all of them)
@@ -63,7 +70,7 @@ class ConvParserBase(ABC):
 
 
     @abstractmethod
-    def split_communication_pairs(self):
+    def split_communication_pairs(self) -> List["ConvParserBase"]:
         """!
         Split input according to the communication pairs.
 
@@ -73,7 +80,7 @@ class ConvParserBase(ABC):
 
 
     @abstractmethod
-    def split_to_windows(self, dur):
+    def split_to_windows(self, dur: float) -> List["ConvParserBase"]:
         """!
         Split input according to time windows
 

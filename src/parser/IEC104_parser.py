@@ -29,12 +29,18 @@ import csv
 import time
 import bidict
 
+from typing import List, Dict, TypeVar, Generic, Optional, Callable, FrozenSet, Tuple
+
 import parser.conversation_parser_base as par
 
 from typing import List, NamedTuple
 from collections import defaultdict
 from enum import Enum
 
+
+ComPairType = FrozenSet[Tuple[str,str]]
+ConvSymbolType = Dict[str, str]
+ConvStrType = List[ConvSymbolType]
 
 class ConvType(Enum):
     """!
@@ -52,13 +58,13 @@ class ConvType(Enum):
     UNKNOWN = 99
 
 
-class IEC104Parser(par.ConvParserBase):
+class IEC104Parser(par.ConvParserBase[Dict[str, str]]):
     """!
     Class for parsing IEC104 conversations
     """
 
 
-    def __init__(self, inp, pr=None):
+    def __init__(self, inp: List[ConvSymbolType], pr: Optional[ComPairType]=None):
         """!
         Constructor taking a list of messages (each message is a dictionary)
 
@@ -68,12 +74,12 @@ class IEC104Parser(par.ConvParserBase):
         self.input = list(filter(IEC104Parser.is_inform_message, inp))
         self.compair = pr
         self.index = 0
-        self.buffer = []
-        self.conversations = []
-        self.incomplete = []
+        self.buffer: List[ConvSymbolType] = []
+        self.conversations: List[ConvStrType] = []
+        self.incomplete: List[ConvStrType] = []
 
 
-    def parse_conversations(self):
+    def parse_conversations(self) -> None:
         """!
         Parse and store all conversations
         """
@@ -88,7 +94,7 @@ class IEC104Parser(par.ConvParserBase):
 
 
     @staticmethod
-    def is_msg_match(compair, val):
+    def is_msg_match(compair: ComPairType, val: ConvSymbolType) -> bool:
         """!
         Does the message match communication pair restriction?
 
@@ -103,7 +109,7 @@ class IEC104Parser(par.ConvParserBase):
 
 
 
-    def get_all_conversations(self, proj=None):
+    def get_all_conversations(self, proj: Optional[Callable]=None) -> List[ConvStrType]:
         """!
         Get all conversations (possibly filter by communication pairs)
 
@@ -119,7 +125,7 @@ class IEC104Parser(par.ConvParserBase):
 
 
     @staticmethod
-    def is_spontaneous(row):
+    def is_spontaneous(row: ConvSymbolType) -> bool:
         """!
         Is the message spontaneous?
 
@@ -130,7 +136,7 @@ class IEC104Parser(par.ConvParserBase):
 
 
     @staticmethod
-    def is_inform_message(row):
+    def is_inform_message(row: ConvSymbolType) -> bool:
         """!
         Is the message informal?
 
@@ -145,7 +151,7 @@ class IEC104Parser(par.ConvParserBase):
 
 
     @staticmethod
-    def get_initial_type(row):
+    def get_initial_type(row: ConvSymbolType) -> ConvType:
         """!
         Get initial type of a conversation
 
@@ -164,7 +170,7 @@ class IEC104Parser(par.ConvParserBase):
 
 
     @staticmethod
-    def in_middle_range(row, tp):
+    def in_middle_range(row: ConvSymbolType, tp: ConvType) -> bool:
         """!
         Is the message in the middle of a conversation
 
@@ -183,7 +189,7 @@ class IEC104Parser(par.ConvParserBase):
 
 
     @staticmethod
-    def is_final(row, tp):
+    def is_final(row: ConvSymbolType, tp: ConvType) -> bool:
         """!
         Is the message final
 
@@ -201,7 +207,7 @@ class IEC104Parser(par.ConvParserBase):
         return False
 
 
-    def get_symbol(self, buff_read):
+    def get_symbol(self, buff_read: bool) -> ConvSymbolType:
         """!
         Get a next message from the buffer.
 
@@ -217,7 +223,7 @@ class IEC104Parser(par.ConvParserBase):
         return self.input[self.index - 1]
 
 
-    def return_symbol(self, val, buff_read):
+    def return_symbol(self, val: ConvSymbolType, buff_read: bool) -> None:
         """!
         Return the message to the buffer.
 
@@ -230,7 +236,7 @@ class IEC104Parser(par.ConvParserBase):
             self.index -= 1
 
 
-    def is_conversation_complete(self, conv):
+    def is_conversation_complete(self, conv: ConvStrType) -> bool:
         """!
         Check if a given conversation is complete (according to the last packet).
 
@@ -241,7 +247,7 @@ class IEC104Parser(par.ConvParserBase):
         return (int(conv[-1]["asduType"]) in [123, 124, 70, 36]) or (int(conv[-1]["cot"]) in [3, 10, 44, 45, 46, 47])
 
 
-    def get_conversation(self):
+    def get_conversation(self) -> Optional[ConvStrType]:
         """!
         Get a following conversation from a list of messages. It implements just a
         couple of cases (definitely not all of them)
@@ -292,7 +298,7 @@ class IEC104Parser(par.ConvParserBase):
         return conv
 
 
-    def split_communication_pairs(self):
+    def split_communication_pairs(self) -> List["IEC104Parser"]:
         """!
         Split input according to the communication pairs.
 
@@ -309,7 +315,7 @@ class IEC104Parser(par.ConvParserBase):
         return ret
 
 
-    def split_to_windows(self, dur):
+    def split_to_windows(self, dur: float) -> List["IEC104Parser"]:
         """!
         Split input according to time windows.
 
@@ -328,7 +334,7 @@ class IEC104Parser(par.ConvParserBase):
         return ret
 
 
-def get_messages(fd):
+def get_messages(fd) -> List[ConvSymbolType]:
     """!
     Get all messages from a csv file.
 

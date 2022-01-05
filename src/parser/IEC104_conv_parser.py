@@ -29,6 +29,8 @@ import time
 import bidict
 import re
 
+from typing import List, Dict, TypeVar, Generic, Optional, Callable, FrozenSet, Tuple
+
 import parser.conversation_parser_base as par
 
 from typing import List, NamedTuple
@@ -36,12 +38,18 @@ from collections import defaultdict
 from enum import Enum
 
 
-class IEC104ConvParser(par.ConvParserBase):
+ComPairType = FrozenSet[Tuple[str,str]]
+RowType = Dict[str, str]
+ConvSymbolType = Tuple[str, str]
+ConvStrType = List[ConvSymbolType]
+
+
+class IEC104ConvParser(par.ConvParserBase[Tuple[str,str]]):
     """!
     Class for parsing IEC104 conversations from already divided messages
     """
 
-    def __init__(self, inp, pr=None):
+    def __init__(self, inp: List[RowType], pr: Optional[ComPairType]=None):
         """!
         Constructor taking a list of messages (each message is a dictionary)
 
@@ -51,10 +59,10 @@ class IEC104ConvParser(par.ConvParserBase):
         self.input = inp
         self.compair = pr
         self.index = 0
-        self.conversations = []
+        self.conversations: List[ConvStrType] = []
 
 
-    def parse_conversations(self):
+    def parse_conversations(self) -> None:
         """!
         Parse and store all conversations
         """
@@ -66,7 +74,7 @@ class IEC104ConvParser(par.ConvParserBase):
             conv = self.get_conversation()
 
 
-    def get_all_conversations(self, proj=None):
+    def get_all_conversations(self, proj: Optional[Callable]=None) -> List[ConvStrType]:
         """!
         Get all conversations (possibly filter by communication pairs)
 
@@ -77,7 +85,7 @@ class IEC104ConvParser(par.ConvParserBase):
         return self.conversations
 
 
-    def get_line(self):
+    def get_line(self) -> RowType:
         """!
         Get a next line
 
@@ -89,7 +97,7 @@ class IEC104ConvParser(par.ConvParserBase):
         return self.input[self.index - 1]
 
 
-    def parse_data(self, data):
+    def parse_data(self, data: str) -> ConvStrType:
         """!
         Parse data
 
@@ -101,11 +109,12 @@ class IEC104ConvParser(par.ConvParserBase):
         lst = data.split(",")
         for it in lst:
             m = re.match(r"\<([0-9]+)\.(([0-9]+|n))\>", it)
-            ret.append((m.group(1), m.group(2)))
+            if m is not None:
+                ret.append((m.group(1), m.group(2)))
         return ret
 
 
-    def get_conversation(self):
+    def get_conversation(self) -> Optional[ConvStrType]:
         """!
         Get a following conversation from already divided messages.
 
@@ -122,7 +131,7 @@ class IEC104ConvParser(par.ConvParserBase):
         return conv
 
 
-    def split_communication_pairs(self):
+    def split_communication_pairs(self) -> List["IEC104ConvParser"]:
         """!
         Split input according to the communication pairs.
 
@@ -151,7 +160,7 @@ class IEC104ConvParser(par.ConvParserBase):
         return ret
 
 
-    def split_to_windows(self, dur):
+    def split_to_windows(self, dur: float) -> List["IEC104ConvParser"]:
         """!
         Split input according to time windows.
 
