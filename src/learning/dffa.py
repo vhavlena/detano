@@ -23,14 +23,17 @@
 
 import math
 from collections import defaultdict
+from typing import List, Set, Union, Optional, Tuple, no_type_check
+
 import learning.ffa as ffa
+import wfa.core_wfa_export as core_wfa_export
 
 class DFFA(ffa.FFA):
     """!
     Deterministic frequency automaton class
     """
 
-    def __init__(self, states, trans, ini, fin):
+    def __init__(self, states: Set[ffa.StateType], trans: ffa.TransFuncDetType, ini: ffa.StateWeightType, fin: ffa.StateWeightType, root: Optional[ffa.StateType] = None):
         """!
         Constructor
 
@@ -43,24 +46,13 @@ class DFFA(ffa.FFA):
         inits = self._get_inits()
         if len(inits) != 1:
             raise Exception("Not deterministic")
-        self._root = inits[0][0]
+        if root is None:
+            self._root = inits[0][0]
+        else:
+            self._root = root
 
 
-    def __init__(self, states, trans, ini, fin, root):
-        """!
-        Constructor
-
-        @param states: States of the DFFA
-        @param trans: Transitions of the DFFA
-        @param ini: Initial states
-        @param fin: Final states
-        @param root: The root state
-        """
-        super(DFFA, self).__init__(states, trans, ini, fin)
-        self._root = root
-
-
-    def get_root(self):
+    def get_root(self) -> ffa.StateType:
         """!
         Get the root (initial) state
 
@@ -69,7 +61,7 @@ class DFFA(ffa.FFA):
         return self._root
 
 
-    def _find_pred(self, state):
+    def _find_pred(self, state: ffa.StateType) -> Optional[Set[ffa.StateType]]:
         """!
         Get the predecessor of a given state
 
@@ -82,7 +74,8 @@ class DFFA(ffa.FFA):
         return None
 
 
-    def stochastic_merge(self, red, blue):
+    @no_type_check
+    def stochastic_merge(self, red: ffa.StateType, blue: ffa.StateType) -> None:
         """!
         Merging two states red and blue (followed by folding frequencies from the
         merged subtree).
@@ -100,7 +93,7 @@ class DFFA(ffa.FFA):
 
 
 
-    def stochastic_fold(self, red, blue):
+    def stochastic_fold(self, red: ffa.StateType, blue: ffa.StateType) -> None:
         """!
         Fold frequencies from subtree given by blue root into the automaton
         rooted at the red state.
@@ -121,7 +114,7 @@ class DFFA(ffa.FFA):
 
 
     @staticmethod
-    def alergia_test(f1, n1, f2, n2, alpha):
+    def alergia_test(f1: float, n1: float, f2: float, n2: float, alpha: float) -> bool:
         """!
         Alergia test for checking whether to merge two states
 
@@ -137,7 +130,7 @@ class DFFA(ffa.FFA):
         return gamma < (math.sqrt(1.0/n1) + math.sqrt(1.0/n2)) * math.sqrt(0.5 * math.log10(2.0/alpha))
 
 
-    def state_freq(self, state):
+    def state_freq(self, state: ffa.StateType) -> float:
         """!
         Compute frequency of a state (number of strings accepted at the state
         or leaving the state).
@@ -157,7 +150,7 @@ class DFFA(ffa.FFA):
         return sum
 
 
-    def alergia_compatible(self, qa, qb, alpha):
+    def alergia_compatible(self, qa: ffa.StateType, qb: ffa.StateType, alpha: float) -> bool:
         """!
         Determine whether two states are compatible for merging (wrt the parameter
         alpha).
@@ -185,7 +178,7 @@ class DFFA(ffa.FFA):
         return True
 
 
-    def normalize(self):
+    def normalize(self) -> core_wfa_export.CoreWFAExport:
         """!
         Normalize frequency automaton to obtain a probabilistic automaton
         (probabilities are in the range [0,1] with the sum-consistency condition).

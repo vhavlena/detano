@@ -30,14 +30,16 @@ import math
 import detection.anom_detect_base as anom
 import wfa.core_wfa_export as core_wfa_export
 import wfa.matrix_wfa as matrix_wfa
+import wfa.core_wfa as core_wfa
 
+from typing import Callable, List, no_type_check
 
 class AnomMember(anom.AnomDetectBase):
     """!
     Anomaly detection based on a single message reasoning
     """
 
-    def __init__(self, aut_map, learning_procedure):
+    def __init__(self, aut_map: dict[anom.ComPairType, List[core_wfa.CoreWFA]], learning_procedure: Callable):
         """!
         Constructor
 
@@ -50,7 +52,7 @@ class AnomMember(anom.AnomDetectBase):
         self.learning_proc = learning_procedure
 
 
-    def dpa_selection(self, window, compair):
+    def dpa_selection(self, window: List, compair: anom.ComPairType) -> List[core_wfa.CoreWFA]:
         """!
         Select appropriate DPA according to a communication window and a
         communication pair.
@@ -63,7 +65,7 @@ class AnomMember(anom.AnomDetectBase):
         return self.golden_map[compair]
 
 
-    def detect(self, window, compair):
+    def detect(self, window: List, compair: anom.ComPairType) -> List[float]:
         """!
         Detect if anomaly occurrs in the given window.
 
@@ -76,7 +78,7 @@ class AnomMember(anom.AnomDetectBase):
         return [self.apply_detection(aut, window, compair) for aut in auts]
 
 
-    def apply_detection(self, aut, window, compair):
+    def apply_detection(self, aut: core_wfa.CoreWFA, window: List, compair: anom.ComPairType):
         """!
         Apply member-based anomaly detection. Returns list of conversations that
         are not accepted by aut.

@@ -24,11 +24,20 @@
 import copy
 from dataclasses import dataclass
 from collections import defaultdict
+from typing import List, Set, Union, Optional, Tuple, no_type_check, TypeVar, Generic
+
 import wfa.core_wfa as core_wfa
 import wfa.core_wfa_export as core_wfa_export
 
+SymbolType = TypeVar("SymbolType")
+StateType = str
+StateWeightType = dict[StateType, int]
+TransFuncType = dict[StateType, dict[str, Set["FFATrans"]]]
+TransFuncDetType = dict[StateType, dict[str, "FFATrans"]]
+TransFuncMixType = Union[ dict[StateType, dict[str, Set["FFATrans"]]], dict[StateType, dict[str, "FFATrans"]]]
+
 @dataclass(eq=True, unsafe_hash=True)
-class FFATrans:
+class FFATrans(Generic[SymbolType]):
     """!
     Class representing a transtion of the FFA
     """
@@ -39,7 +48,7 @@ class FFATrans:
     ## Weight
     weight: int
     ## Symbol
-    symbol: int
+    symbol: SymbolType
     ## Label
     label: int
 
@@ -49,7 +58,7 @@ class FFA:
     General frequency automata (FFA)
     """
 
-    def __init__(self, states, trans, ini, fin):
+    def __init__(self, states: Set[StateType], trans: TransFuncMixType, ini: StateWeightType, fin: StateWeightType):
         """!
         Constructor
 
@@ -62,10 +71,10 @@ class FFA:
         self._trans = trans
         self._ini = ini
         self._fin = fin
-        self._states_dict = None
+        self._states_dict: Optional[dict[StateType, StateType]] = None
 
 
-    def _find_eq_trans(self, val, trans):
+    def _find_eq_trans(self, val: FFATrans, trans: Set[FFATrans]) -> Optional[FFATrans]:
         """!
         Find transition with equal structure (except weight and label)
 
@@ -80,7 +89,7 @@ class FFA:
         return None
 
 
-    def _create_tr_func(self, tr_list):
+    def _create_tr_func(self, tr_list: List[FFATrans]) -> TransFuncType:
         """!
         Create transition function from a list of transitions
 
@@ -88,7 +97,7 @@ class FFA:
 
         @return Transitions represented by a dictionary (transition function)
         """
-        tr_func = defaultdict(lambda: dict())
+        tr_func: TransFuncType = defaultdict(lambda: dict())
         for tr in tr_list:
             try:
                 tmp = tr_func[tr.src][tr.symbol]
@@ -104,7 +113,7 @@ class FFA:
 
 
 
-    def _merge_in_dict(self, states, id, dct):
+    def _merge_in_dict(self, states: Set[StateType], id: StateType, dct: StateWeightType):
         """!
         Merge states in initial/final state vector
 
@@ -114,7 +123,7 @@ class FFA:
 
         @return Dictionary with merged values
         """
-        new_dict = defaultdict(lambda: 0)
+        new_dict: StateWeightType = defaultdict(lambda: 0)
         tw = 0
         for st, weight in dct.items():
             if st in states:
@@ -126,13 +135,13 @@ class FFA:
         return new_dict
 
 
-    def get_transition_list(self):
+    def get_transition_list(self) -> List[FFATrans]:
         """!
         Get list of transitions from the transition function
 
         @return List of transitions
         """
-        lst = []
+        lst: List[FFATrans] = []
         for src, tr_dest in self._trans.items():
             for sym, dst in tr_dest.items():
                 if isinstance(dst, set):
@@ -142,7 +151,7 @@ class FFA:
         return lst
 
 
-    def inverse_ffa(self):
+    def inverse_ffa(self) -> "FFA":
         """!
         Get the inverse FFA
 
@@ -156,7 +165,7 @@ class FFA:
         return FFA(self.get_states(), trs, self._fin, self._ini)
 
 
-    def _get_inits(self):
+    def _get_inits(self) -> List[Tuple[StateType, int]]:
         """!
         Get initial states
 
@@ -165,7 +174,7 @@ class FFA:
         return list(self._ini.items())
 
 
-    def get_states(self):
+    def get_states(self) -> Set[StateType]:
         """!
         Get all states
 
@@ -174,7 +183,7 @@ class FFA:
         return self._states
 
 
-    def get_finals(self):
+    def get_finals(self) -> StateWeightType:
         """!
         Get final states
 
@@ -183,7 +192,7 @@ class FFA:
         return self._fin
 
 
-    def get_transitions(self):
+    def get_transitions(self) -> TransFuncMixType:
         """!
         Get transitions
 
@@ -192,7 +201,7 @@ class FFA:
         return self._trans
 
 
-    def successors(self, state, sym=None):
+    def successors(self, state: StateType, sym: Optional[str]=None) -> Set[StateType]:
         """!
         Get all successors from state over sym
 
@@ -201,7 +210,7 @@ class FFA:
 
         @return Set of all successors
         """
-        succ = set()
+        succ: Set[StateType] = set()
         for s, tr_dest in self._trans[state].items():
             if sym is not None and s != sym:
                 continue
@@ -212,7 +221,7 @@ class FFA:
         return succ
 
 
-    def successors_set(self, states, sym=None):
+    def successors_set(self, states: Set[StateType], sym: Optional[str]=None) -> Set[StateType]:
         """!
         Get all successors from the set states over sym
 
@@ -221,13 +230,13 @@ class FFA:
 
         @return Set of all successors
         """
-        succ = set()
+        succ: Set[StateType] = set()
         for st in states:
             succ = succ | self.successors(st, sym)
         return succ
 
 
-    def reachable_states(self, st_set):
+    def reachable_states(self, st_set: Set[StateType]) -> Set[StateType]:
         """!
         Get all reachable states from st_set
 
@@ -241,7 +250,7 @@ class FFA:
         return self.reachable_states(new_set | st_set)
 
 
-    def merge_states(self, states):
+    def merge_states(self, states: Set[StateType]) -> None:
         """!
         Merge a set of states (remove those states and replace with one in the set)
 
@@ -268,7 +277,7 @@ class FFA:
         self._states_dict = None
 
 
-    def merge_equivalent(self, classes):
+    def merge_equivalent(self, classes: Set[Set[StateType]]) -> None:
         """!
         Merge equivalent states according to the equivalent classes
 
@@ -278,7 +287,7 @@ class FFA:
             self.merge_states(item)
 
 
-    def path_length(self, st1, st2):
+    def path_length(self, st1: StateType, st2: StateType) -> Optional[int]:
         """!
         Get length of a shortest path between st1 and st2
 
@@ -289,7 +298,7 @@ class FFA:
         """
         new_set = set([st1])
         ln = 0
-        all = set()
+        all: Set[StateType] = set()
         while not new_set <= all:
             if st2 in new_set:
                 return ln
@@ -299,12 +308,13 @@ class FFA:
         return None
 
 
-    def trim(self):
+    @no_type_check
+    def trim(self) -> None:
         """
         Remove unreachable states from the automaton.
         """
         reach = self.reachable_states(set(self._ini.keys()))
-        new_tran = defaultdict(lambda: dict())
+        new_tran: TransFuncMixType = defaultdict(lambda: dict())
         st_rem = self._states - reach
 
         for st in reach:
@@ -319,20 +329,20 @@ class FFA:
         self._trans = new_tran
 
 
-    def rename_states(self):
+    @no_type_check
+    def rename_states(self) -> None:
         """
         Rename states to consecutive numbers (from 0)
         """
         self._states_dict = dict()
-        new_transitions = []
         new_states = set()
         new_finals = defaultdict(lambda: 0)
         new_starts = defaultdict(lambda: 0)
         count = 0
 
         for st in self.get_states():
-            self._states_dict[st] = count
-            new_states.add(count)
+            self._states_dict[st] = str(count)
+            new_states.add(str(count))
             count += 1
 
         for state, prob in self._fin.items():
@@ -343,10 +353,10 @@ class FFA:
             dest = self._states_dict[state]
             new_starts[dest] = prob
 
-        new_tran = defaultdict(lambda: dict())
+        new_tran: TransFuncMixType = defaultdict(lambda: dict())
         for src, tr_dest in self._trans.items():
             for sym, dst in tr_dest.items():
-                n_dst = None
+                n_dst: Optional[Union[FFATrans, Set[FFATrans]]] = None
                 if isinstance(dst, set):
                     n_dst = set()
                     for tr in dst:
@@ -363,7 +373,7 @@ class FFA:
         self._states = new_states
 
 
-    def to_graphiwiz(self, legend=None):
+    def to_graphiwiz(self, legend: str=None) -> str:
         """!
         Convert the WFA to graphwiz format (for graphical visualization).
 
@@ -405,7 +415,7 @@ class FFA:
         return dot
 
 
-    def _print_transition(self, src, dest, sym, weight):
+    def _print_transition(self, src: StateType, dest: StateType, sym: str, weight: float) -> str:
         """!
         Convert a transition to graphwiz format
 

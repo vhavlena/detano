@@ -27,8 +27,11 @@ import sys
 import math
 import learning.fpt as fpt
 import learning.dffa as dffa
+import learning.ffa as ffa
 
-def choose_blue_state(freq_aut, blue_set, t0):
+from typing import Set, Optional
+
+def choose_blue_state(freq_aut: dffa.DFFA, blue_set: Set[ffa.StateType], t0: int) -> Optional[ffa.StateType]:
     """!
     Chose a blue state from a set of blue states.
 
@@ -44,7 +47,7 @@ def choose_blue_state(freq_aut, blue_set, t0):
     return None
 
 
-def choose_red_state(freq_aut, red_set, blue, alpha):
+def choose_red_state(freq_aut: dffa.DFFA, red_set: Set[ffa.StateType], blue: ffa.StateType, alpha: float) -> Optional[ffa.StateType]:
     """!
     Chose a red state from a set of red states.
 
@@ -61,7 +64,7 @@ def choose_red_state(freq_aut, red_set, blue, alpha):
     return None
 
 
-def alergia(freq_aut, alpha, t0):
+def alergia(freq_aut: dffa.DFFA, alpha: float, t0: int) -> dffa.DFFA:
     """!
     PA learning using the Alergia algorithm.
 

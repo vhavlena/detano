@@ -24,13 +24,19 @@
     If not, see <http://www.gnu.org/licenses/>.
 """
 
-class Distance:
+from typing import TypeVar, Generic, List, Tuple, Set
+
+T = TypeVar("T")
+DistType = dict[Tuple[T, T], float]
+SortedDictType = List[Tuple[Tuple[T,T], float]]
+
+class Distance(Generic[T]):
     """!
     Class removing items from a set causing the minimum error
     """
 
 
-    def __init__(self, dists, pts):
+    def __init__(self, dists: DistType, pts: List[T]):
         """!
         Constructor
 
@@ -41,7 +47,7 @@ class Distance:
         self.points = set(pts)
 
 
-    def _get_error_bound(self, removed, sorted_dist):
+    def _get_error_bound(self, removed: Set[T], sorted_dist: SortedDictType) -> float:
         """!
         Compute the error bound with the set of removed automata.
 
@@ -59,7 +65,7 @@ class Distance:
         return error
 
 
-    def compute_subset_error(self, max_error):
+    def compute_subset_error(self, max_error: float) -> Set[T]:
         """!
         Get subset of items that meets the max_error bound.
 
@@ -68,7 +74,7 @@ class Distance:
         @return: Subset of items causing error less that max_error
         """
         error = 0.0
-        removed = set()
+        removed: Set[T] = set()
         sorted_dist = sorted(self.dist.items(), key=lambda x: x[1])
 
         for k, v in sorted_dist:

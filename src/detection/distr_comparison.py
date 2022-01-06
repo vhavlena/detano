@@ -31,6 +31,9 @@ import detection.anom_detect_base as anom
 import wfa.core_wfa_export as core_wfa_export
 import wfa.matrix_wfa as matrix_wfa
 import algorithms.distance as dist
+import wfa.core_wfa as core_wfa
+
+from typing import Callable, List, no_type_check
 
 ## Use sparse matrices to comput the Euclid distance
 SPARSE = False
@@ -41,7 +44,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
     """
 
 
-    def __init__(self, aut_map, learning_procedure):
+    def __init__(self, aut_map: dict[anom.ComPairType, List[core_wfa.CoreWFA]], learning_procedure: Callable):
         """!
         Constructor
 
@@ -55,7 +58,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
 
 
 
-    def dpa_selection(self, window, compair):
+    def dpa_selection(self, window: List, compair: anom.ComPairType) -> List[core_wfa.CoreWFA]:
         """!
         Select appropriate DPA according to a communication window and a
         communication pair.
@@ -68,7 +71,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
         return self.golden_map[compair]
 
 
-    def detect(self, window, compair):
+    def detect(self, window: List, compair: anom.ComPairType) -> List[float]:
         """!
         Detect if anomaly occurrs in the given window.
 
@@ -81,7 +84,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
         return [self.apply_detection(aut, window, compair) for aut in auts]
 
 
-    def remove_identical(self):
+    def remove_identical(self) -> None:
         """!
         Remove identical automata from the golden map
         """
@@ -89,7 +92,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
             self.golden_map[k] = list(set(v))
 
 
-    def remove_euclid_similar(self, max_error):
+    def remove_euclid_similar(self, max_error: float) -> None:
         """!
         Remove Euclid similar automata from the golden map (with the error bounded
         by max_error).
@@ -101,7 +104,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
             self.golden_map[k] = self._remove_euclid_similar_it(max_error, v)
 
 
-    def _remove_euclid_similar_it(self, max_error, lst):
+    def _remove_euclid_similar_it(self, max_error: float, lst: List[core_wfa.CoreWFA]) -> List[core_wfa.CoreWFA]:
         """!
         Remove Euclid similar automata from the given list of automata (with the error bounded
         by max_error).
@@ -117,7 +120,8 @@ class AnomDistrComparison(anom.AnomDetectBase):
 
 
     @staticmethod
-    def euclid_distance(aut1, aut2):
+    @no_type_check
+    def euclid_distance(aut1: core_wfa.CoreWFA, aut2: core_wfa.CoreWFA) -> float:
         """!
         Compute Euclid distance between two automata
 
@@ -154,7 +158,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
         return min(1.0, math.sqrt(max(0.0, res1 - 2*res2 + res3)))
 
 
-    def apply_detection(self, aut, window, compair):
+    def apply_detection(self, aut: core_wfa.CoreWFA, window: List, compair: anom.ComPairType) -> float:
         """!
         Apply distribution-comparison-based anomaly detection.
 

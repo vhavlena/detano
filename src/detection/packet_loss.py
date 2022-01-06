@@ -27,7 +27,7 @@ class PacketLoss:
     """
 
     @staticmethod
-    def compatible_strings(str1, str2):
+    def compatible_strings(str1: str, str2: str) -> bool:
         """!
         Compute edit distance (assuming only the delete operation) between two
         strings

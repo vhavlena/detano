@@ -23,6 +23,11 @@
 """
 
 from abc import ABC, abstractmethod
+from typing import FrozenSet, Tuple, List
+
+import wfa.core_wfa as core_wfa
+
+ComPairType = FrozenSet[Tuple[str,str]]
 
 class AnomDetectBase(ABC):
     """!
@@ -30,7 +35,7 @@ class AnomDetectBase(ABC):
     """
 
     @abstractmethod
-    def dpa_selection(self, window, compair):
+    def dpa_selection(self, window: List, compair: ComPairType):
         """!
         Abstract DPA selection
 
@@ -43,7 +48,7 @@ class AnomDetectBase(ABC):
 
 
     @abstractmethod
-    def apply_detection(self, aut, window, compair):
+    def apply_detection(self, aut: core_wfa.CoreWFA, window: List, compair: ComPairType):
         """!
         Abstract apply detection on a given window
 
@@ -56,7 +61,7 @@ class AnomDetectBase(ABC):
         pass
 
 
-    def detect(self, window, compair):
+    def detect(self, window: List, compair: ComPairType):
         """!
         Abstract anomaly detection
 

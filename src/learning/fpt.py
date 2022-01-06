@@ -24,6 +24,7 @@
 import learning.ffa as ffa
 import learning.dffa as dffa
 from collections import defaultdict
+from typing import Set, Tuple, Any, List
 
 
 class FPT(dffa.DFFA):
@@ -31,7 +32,7 @@ class FPT(dffa.DFFA):
     Frequency prefix tree (FPT)
     """
 
-    def __init__(self, states, trans, ini, fin):
+    def __init__(self, states: Set[ffa.StateType], trans: ffa.TransFuncDetType, ini: ffa.StateWeightType, fin: ffa.StateWeightType):
         """!
         Constructor
 
@@ -41,7 +42,7 @@ class FPT(dffa.DFFA):
         @param fin: Final states
         """
         super(FPT, self).__init__(states, trans, ini, fin)
-        self.flanguages = defaultdict(lambda: defaultdict(lambda: 0))
+        self.flanguages: dict[ffa.StateType, dict[Tuple, float]] = defaultdict(lambda: defaultdict(lambda: 0))
 
 
     def __init__(self):
@@ -52,17 +53,17 @@ class FPT(dffa.DFFA):
         ini = defaultdict(lambda: 0)
         ini[rt] = 0
         super(FPT, self).__init__(set([rt]), defaultdict(lambda: dict()), ini, defaultdict(lambda: 0), rt)
-        self.flanguages = defaultdict(lambda: defaultdict(lambda: 0))
+        self.flanguages: dict[ffa.StateType, dict[Tuple, float]] = defaultdict(lambda: defaultdict(lambda: 0))
 
 
-    def __str__(self):
+    def __str__(self) -> str:
         """!
         Convert to a string representation
         """
         return self.show()
 
 
-    def _partition_set(self, st, mp):
+    def _partition_set(self, st: ffa.StateType, mp: dict[ffa.StateType, Any]) -> List[Set[ffa.StateType]]:
         """!
         Partition given set to equivalent classes according to a relation
 
@@ -71,7 +72,7 @@ class FPT(dffa.DFFA):
 
         @return: Partitioning of the set st
         """
-        act = []
+        act: List[List[ffa.StateType]] = []
         for item in st:
             found = False
             for eq in act:
@@ -84,7 +85,7 @@ class FPT(dffa.DFFA):
         return [set(u) for u in act]
 
 
-    def _normalize_flanguages(self):
+    def _normalize_flanguages(self) -> None:
         """!
         Normalize flanguages for each state
         """
@@ -96,7 +97,7 @@ class FPT(dffa.DFFA):
             self.flanguages[st] = nd
 
 
-    def show(self):
+    def show(self) -> str:
         """!
         Convert the FPT to a string representation
 
@@ -116,7 +117,7 @@ class FPT(dffa.DFFA):
         return ret
 
 
-    def _create_branch(self, state, string, label):
+    def _create_branch(self, state: ffa.StateType, string: str, label: int) -> None:
         """!
         Create new branch in the FPT for the string string
 
@@ -135,7 +136,7 @@ class FPT(dffa.DFFA):
         self._fin[act] = self._fin[act] + 1
 
 
-    def get_leaves(self):
+    def get_leaves(self) -> Set[ffa.StateType]:
         """!
         Get leaves (states without outgoing transitions)
 
@@ -148,7 +149,7 @@ class FPT(dffa.DFFA):
         return lv
 
 
-    def suffix_minimize(self):
+    def suffix_minimize(self) -> None:
         """!
         Merge equivalent backward deterministic states
         """
@@ -161,7 +162,7 @@ class FPT(dffa.DFFA):
         self.merge_states(self.get_leaves())
 
 
-    def count_label_edges(self, label):
+    def count_label_edges(self, label: int) -> int:
         """!
         Count edges with labels corresponding to label
 
@@ -176,7 +177,7 @@ class FPT(dffa.DFFA):
         return cnt
 
 
-    def add_string(self, string, label=0):
+    def add_string(self, string: str, label: int=0) -> None:
         """!
         Add string to the frequency prefix tree
 
@@ -199,7 +200,7 @@ class FPT(dffa.DFFA):
         self._fin[act] = self._fin[act] + 1
 
 
-    def add_string_list(self, lst, label=0):
+    def add_string_list(self, lst: List[str], label: int=0) -> None:
         """!
         Add a list of strings to frequency prefix tree
 

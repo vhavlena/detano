@@ -71,10 +71,10 @@ class CoreWFAExport(core_wfa.CoreWFA[core_wfa.StateType, core_wfa.SymbolType]):
                 aggregate[(transition.src, transition.dest)] \
                     = [transition.symbol], transition.weight
             else:
-                aggregate[(transition.src, transition.dest)][0]\
-                    .append(transition.symbol)
-                aggregate[(transition.src, transition.dest)][1] \
-                    += float(transition.weight)
+                v1, v2 = aggregate[(transition.src, transition.dest)]
+                v1.append(transition.symbol)
+                v2 += float(transition.weight)
+                aggregate[(transition.src, transition.dest)] = v1, v2
         return aggregate
 
 
@@ -98,7 +98,7 @@ class CoreWFAExport(core_wfa.CoreWFA[core_wfa.StateType, core_wfa.SymbolType]):
             for state, weight in self._finals.items():
                 if weight == 0.0:
                     continue
-                if state_label == None:
+                if state_label is None:
                     dot += "\"" + str(state) + "\"" + " [label=\"" \
                         + str(state) + ", " \
                         + str(round(weight, PRECISE)) + "\"]"
@@ -109,7 +109,7 @@ class CoreWFAExport(core_wfa.CoreWFA[core_wfa.StateType, core_wfa.SymbolType]):
                 dot += ";\n"
 
         dot += "node [shape = circle];\n"
-        if state_label != None:
+        if state_label is not None:
             for state in self.get_states():
                 if state not in self._finals:
                     dot += "\"" + str(state) + "\"" + " [label=\"" \
