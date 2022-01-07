@@ -19,15 +19,6 @@ provided `requirements.txt` file (all dependencies can be installed via `pip3
 install -r requirements.txt`). In order to generate the documentation run
 `doxygen` in the `doc` folder.
 
-### Automata Format
-
-PAs are specified using a format, which given as follows.
-```
-<initial state>
-(<source state> <destination state> <symbol> <probability>)*
-(<final state> <probability>)*
-```
-
 ### Tool Support Overview
 
 All tools in the suite works with automata obtained from a list of messages
@@ -73,6 +64,7 @@ can be run as follows:
   * `--smoothing` use smoothing (for distr only)
   * `--reduced=val` remove similar automata with the given error upper-bound val
     [0,1] (for distr only)
+  * `--threshold=val` find malicious conversations from windows having distance higher than val
   * `--help` print a help message
 
 ### Automata Learning
@@ -88,9 +80,62 @@ the tool can be run as follows:
   * `--format=conv/ipfix` format of input file: conversations/IPFIX (default IPFIX)
   * `--help` print a help message
 
+
+### Example of Use
+
+First, download datasets from [Dataset
+repository](https://github.com/matousp/datasets). The benchmark contains
+datasets in IPFIX format, capturing various anomaly scenarios. Example of the
+anomaly detection:
+
+```bash
+$ ./anomaly_check.py ../../datasets/scada-iec104/attacks/normal-traffic.csv ../../datasets/scada-iec104/attacks/scanning-attack.csv --atype=pa --alg=distr --smoothing --format=ipfix
+```
+```
+Automata counts:
+192.168.11.248:2404 -- 192.168.11.111:61254 | 4
+
+Detection results:
+../../datasets/scada-iec104/attacks/normal-traffic.csv ../../datasets/scada-iec104/attacks/scanning-attack.csv
+
+192.168.11.248:2404 -- 192.168.11.111:61254
+0;0.0
+1;0.0
+2;0.0
+3;0.0
+4;0.0
+5;0.0
+6;0.0
+...
+```
+
+Example of the automata learning:
+
+```bash
+$ ./pa_learning.py ../../datasets/scada-iec104/attacks/normal-traffic.csv --atype=pa --format=ipfix
+```
+```
+File: normal-traffic.csv
+alpha: 0.05, t0: 13
+States 3
+Testing: 0/25233 (missclassified/all)
+Accuracy: 1.0
+```
+
+
+### Automata Format
+
+PAs are specified using a format, which given as follows.
+```
+<initial state>
+(<source state> <destination state> <symbol> <probability>)*
+(<final state> <probability>)*
+```
+
 ### Structure of the Repository
 
 - `src` Source codes of the tool support
+- `doc` Source code documentation
 
 ### Citing
 
