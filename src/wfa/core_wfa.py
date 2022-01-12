@@ -30,7 +30,7 @@ import math
 import wfa.wfa_exceptions as wfa_exceptions
 
 from typing import List, Optional, Set, TypeVar, Generic, Callable
-from collections import deque
+from collections import deque, defaultdict
 
 StateType = TypeVar("StateType")
 SymbolType = TypeVar("SymbolType")
@@ -649,3 +649,31 @@ class CoreWFA(Generic[StateType, SymbolType]):
         """
         for tr in self.get_transitions():
             tr.symbol = fnc(tr.symbol)
+
+
+    def get_most_probable_string(self) -> List[SymbolType]:
+        """!
+        Compute the most probable word of the DPA
+
+        @return A word with a highest probability
+        """
+
+        assert(self.is_deterministic())
+
+        val: dict[StateType, float] = defaultdict(lambda: 0.0)
+        words: dict[StateType, List[SymbolType]] = dict()
+
+        for k, _ in self._finals.items():
+            val[k] = 1.0
+            words[k] = []
+
+        changed = True
+        while changed:
+            changed = False
+            for tr in self.get_transitions():
+                if val[tr.src] < val[tr.dest]*tr.weight:
+                    val[tr.src] = val[tr.dest]*tr.weight
+                    words[tr.src] = [tr.symbol] + words[tr.dest]
+                    changed = True
+
+        return words[list(self._start.keys())[0]]
