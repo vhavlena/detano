@@ -27,6 +27,7 @@ import csv
 import ast
 import math
 import itertools
+import copy
 from dataclasses import dataclass
 from collections import defaultdict
 from enum import Enum
@@ -35,6 +36,7 @@ from typing import List, Tuple, FrozenSet, Callable, Union
 
 import learning.fpt as fpt
 import learning.alergia as alergia
+import wfa.core_wfa as core_wfa
 import wfa.core_wfa_export as core_wfa_export
 import wfa.matrix_wfa as matrix_wfa
 import parser.IEC104_parser as con_par
@@ -72,6 +74,17 @@ class AutType(Enum):
 class InputFormat(Enum):
     IPFIX = 0
     CONV = 1
+
+
+"""!
+Details about the anomalies
+"""
+@dataclass
+class AnomDetails:
+    bad_conv : List
+    test_aut : core_wfa.CoreWFA
+    model_aut : core_wfa.CoreWFA
+
 
 """
 Program parameters
@@ -301,8 +314,9 @@ def main():
             res[item.compair].append(r)
             if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
                 if min(r) > par.threshold:
-                    r = anom_member.detect(window.get_all_conversations(abstraction), item.compair)
-                    anomalies[item.compair][cnt] = r[0]
+                    mem_det = anom_member.detect(window.get_all_conversations(abstraction), item.compair)
+                    ind = r.index(min(r))
+                    anomalies[item.compair][cnt] = AnomDetails(mem_det[0], copy.deepcopy(anom.test_fa), copy.deepcopy(anom.golden_map[item.compair][ind]))
             cnt += 1
 
     print("Detection results: ")
@@ -324,9 +338,16 @@ def main():
     if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
         print("\nPossibly problematic conversations: ")
         for ent, windows in anomalies.items():
-            for i, conv in windows.items():
+            for i, det in windows.items():
                 print("Communicating: {0}; Window: {1}".format(ent_format(ent), i))
-                print(conv_list_format(conv))
+
+                print("Bad conversations:")
+                tmp = [k for k,v in itertools.groupby(sorted(det.bad_conv))]
+                print(conv_list_format(tmp))
+
+                print("Missing conversation:")
+                print(det.model_aut.difference_dwfa(det.test_aut).get_most_probable_string())
+
                 print()
 
 
