@@ -55,6 +55,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
         self.golden_map = aut_map
         ## Procedure used to obtain a PA from a list of messages
         self.learning_proc = learning_procedure
+        self.test_fa = None
 
 
 
@@ -176,13 +177,13 @@ class AnomDistrComparison(anom.AnomDetectBase):
         if len(window) == 0 and len(aut.get_transitions()) > 1:
             return 1.0
 
-        test_fa = self.learning_proc(window)
+        self.test_fa = self.learning_proc(window)
         d = None
         try:
-            d = AnomDistrComparison.euclid_distance(aut, test_fa)
+            d = AnomDistrComparison.euclid_distance(aut, self.test_fa)
         except ValueError:
             SPARSE = True
-            d = AnomDistrComparison.euclid_distance(test_fa, aut)
+            d = AnomDistrComparison.euclid_distance(self.test_fa, aut)
             SPARSE = False
         return d
 
