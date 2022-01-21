@@ -672,8 +672,8 @@ class CoreWFA(Generic[StateType, SymbolType]):
         val: dict[StateType, float] = defaultdict(lambda: 0.0)
         words: dict[StateType, List[SymbolType]] = dict()
 
-        for k, _ in self._finals.items():
-            val[k] = 1.0
+        for k, v in self._finals.items():
+            val[k] = v
             words[k] = []
 
         changed = True
