@@ -50,6 +50,7 @@ SPARSE = False
 rows_filter_normal = ["asduType", "cot"]
 DURATION = 300
 AGGREGATE = True
+ACCELERATE = True
 
 
 ComPairType = FrozenSet[Tuple[str,str]]
@@ -306,12 +307,17 @@ def main():
         anom_member = mem.AnomMember(golden_map_member, learn_proc)
     res = defaultdict(lambda: [])
     test_com = test_parser.split_communication_pairs()
+    last = 0
+    acc = par.threshold if ACCELERATE and par.threshold is not None else 0.0
+
     for item in test_com:
         cnt = 0
-        for window in item.split_to_windows(DURATION):
+        wns = item.split_to_windows(DURATION)
+        for window in wns:
             window.parse_conversations()
-            r = anom.detect(window.get_all_conversations(abstraction), item.compair)
+            r = anom.detect(window.get_all_conversations(abstraction), item.compair, acc)
             res[item.compair].append(r)
+            last = max(cnt, last)
             if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
                 if min(r) > par.threshold:
                     mem_det = anom_member.detect(window.get_all_conversations(abstraction), item.compair)
@@ -327,18 +333,24 @@ def main():
 
         if par.alg == Algorithms.DISTR:
             for i in range(len(v)):
+                if i == last:
+                    continue
                 if AGGREGATE:
                     print("{0};{1}".format(i, min(v[i])))
                 else:
                     print("{0};{1}".format(i, v[i]))
         elif par.alg == Algorithms.MEMBER:
             for i in range(len(v)):
+                if i == last:
+                    continue
                 print("{0};{1}".format(i, [ it for its in v[i] for it in its ]))
 
     if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
         print("\nPossibly problematic conversations: ")
         for ent, windows in anomalies.items():
             for i, det in windows.items():
+                if i == last:
+                    continue
                 print("Communicating: {0}; Window: {1}".format(ent_format(ent), i))
 
                 print("Bad conversations:")
@@ -346,7 +358,10 @@ def main():
                 print(conv_list_format(tmp))
 
                 print("Missing conversation:")
-                print(det.model_aut.difference_dwfa(det.test_aut).get_most_probable_string())
+                if det.model_aut is None:
+                    print("empty model")
+                else:
+                    print(det.model_aut.difference_dwfa(det.test_aut).get_most_probable_string())
 
                 print()
 
