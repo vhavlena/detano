@@ -673,7 +673,7 @@ class CoreWFA(Generic[StateType, SymbolType]):
         words: dict[StateType, List[SymbolType]] = dict()
 
         if len(self._finals) == 0:
-            return []
+            return [], 0.0
 
         for k, v in self._finals.items():
             val[k] = v
@@ -688,7 +688,8 @@ class CoreWFA(Generic[StateType, SymbolType]):
                     words[tr.src] = [tr.symbol] + words[tr.dest]
                     changed = True
 
-        return words[list(self._start.keys())[0]]
+        ini = list(self._start.keys())[0]
+        return words[ini], val[ini]
 
 
     def set_ones(self) -> None:

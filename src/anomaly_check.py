@@ -50,7 +50,7 @@ SPARSE = False
 rows_filter_normal = ["asduType", "cot"]
 DURATION = 300
 AGGREGATE = True
-ACCELERATE = True
+ACCELERATE = False
 
 
 ComPairType = FrozenSet[Tuple[str,str]]
@@ -320,9 +320,10 @@ def main():
             last = max(cnt, last)
             if (par.alg == Algorithms.DISTR) and (par.threshold is not None):
                 if min(r) > par.threshold:
-                    mem_det = anom_member.detect(window.get_all_conversations(abstraction), item.compair)
                     ind = r.index(min(r))
-                    anomalies[item.compair][cnt] = AnomDetails(mem_det[0], copy.deepcopy(anom.test_fa), copy.deepcopy(anom.golden_map[item.compair][ind]))
+                    model = anom.golden_map[item.compair][ind]
+                    mem_det = anom_member.apply_detection(model, window.get_all_conversations(abstraction), item.compair)
+                    anomalies[item.compair][cnt] = AnomDetails(mem_det, copy.deepcopy(anom.test_fa), copy.deepcopy(anom.golden_map[item.compair][ind]))
             cnt += 1
 
     print("Detection results: ")
@@ -357,11 +358,16 @@ def main():
                 tmp = [k for k,v in itertools.groupby(sorted(det.bad_conv))]
                 print(conv_list_format(tmp))
 
+                #aut = det.model_aut
+                #aut.__class__ = core_wfa_export.CoreWFAExport
+                #print(aut.to_dot())
+
                 print("Missing conversation:")
                 if det.model_aut is None:
                     print("empty model")
                 else:
-                    print(det.model_aut.difference_dwfa(det.test_aut).get_most_probable_string())
+                    word, pr = det.model_aut.difference_dwfa(det.test_aut).get_most_probable_string()
+                    print(word, pr)
 
                 print()
 

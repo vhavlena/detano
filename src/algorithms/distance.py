@@ -60,7 +60,7 @@ class Distance(Generic[T]):
         for r in removed:
             for k, v in sorted_dist:
                 if (k[0] == r and k[1] not in removed) or (k[1] == r and k[0] not in removed):
-                    error += v
+                    error = max(v, error)
                     break
         return error
 
