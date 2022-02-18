@@ -144,11 +144,18 @@ def ent_format(k: ComPairType) -> str:
     return "{0}:{1} -- {2}:{3}".format(fip, fp, sip, sp)
 
 
+def conv_format(conv: List) -> str:
+    return "".join([str(elem) for elem in conv])
+
+
 """
 Convert a list of conversations into a string
 """
 def conv_list_format(l: List) -> str:
-    return "\n".join([str(elem) for elem in l])
+    ret = str()
+    for num, sym in enumerate(l):
+        ret += "{0}. {1}\n".format(num+1, conv_format(sym))
+    return ret
 
 
 """
@@ -367,7 +374,7 @@ def main():
                     print("empty model")
                 else:
                     word, pr = det.model_aut.difference_dwfa(det.test_aut).get_most_probable_string()
-                    print(word, pr)
+                    print(conv_format(word), pr)
 
                 print()
 
