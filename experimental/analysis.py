@@ -17,10 +17,11 @@ ATTACKS = {
 
 def main():
     file = sys.argv[1]
-    data = pd.read_csv(file, delimiter=";", skiprows=[0,1], names=["window", "value"])
-    threshold = 0.13
-    attacks = ATTACKS["HMI-value-change"]
+    data = pd.read_csv(file, delimiter=";", names=["window", "value"])
+    threshold = 0.2
+    attacks = [] # ATTACKS["HMI-MITM"]
 
+    data = data.dropna()
     data = data.astype({"window": int, "value": np.float16})
 
     higher = data[data["value"] >= threshold]
