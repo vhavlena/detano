@@ -112,7 +112,7 @@ class AnomDistrComparison(anom.AnomDetectBase):
         """
         self.remove_identical()
         for k, v in self.golden_map.items():
-            self.golden_map[k] = self._remove_euclid_similar_it(max_error, v)
+            self.golden_map[k] = list(self._remove_euclid_similar_it(max_error, v))
 
 
     def _remove_euclid_similar_it(self, max_error: float, lst: List[core_wfa.CoreWFA]) -> List[core_wfa.CoreWFA]:

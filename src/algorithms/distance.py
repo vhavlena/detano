@@ -56,13 +56,15 @@ class Distance(Generic[T]):
 
         @return: Error bound caused by removing items from removed
         """
-        error = 0.0
+        error = None
         for r in removed:
             for k, v in sorted_dist:
                 if (k[0] == r and k[1] not in removed) or (k[1] == r and k[0] not in removed):
+                    if error is None:
+                        error = 0.0
                     error = max(v, error)
                     break
-        return error
+        return error if error is not None else 1.0
 
 
     def compute_subset_error(self, max_error: float) -> Set[T]:
