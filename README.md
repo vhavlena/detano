@@ -6,7 +6,7 @@ probabilistic automata.
 
 ### Installation
 
-To run the tools you need to have installed Python 3 with the following packages
+To run the tools you need to have installed `Python 3.9` or higher with the following packages
 - dataclasses
 - bidict
 - bitarray
