@@ -65,7 +65,7 @@ class AnomMember(anom.AnomDetectBase):
         return self.golden_map[compair]
 
 
-    def detect(self, window: List, compair: anom.ComPairType) -> List[float]:
+    def detect(self, window: List, compair: anom.ComPairType, accelerate: float = 0.0) -> List[float]:
         """!
         Detect if anomaly occurrs in the given window.
 

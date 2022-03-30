@@ -61,7 +61,7 @@ class AnomDetectBase(ABC):
         pass
 
 
-    def detect(self, window: List, compair: ComPairType):
+    def detect(self, window: List, compair: ComPairType, accelerate: float = 0.0):
         """!
         Abstract anomaly detection
 
