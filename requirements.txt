@@ -1,5 +1,5 @@
-scipy==1.6.2
-bidict==0.21.2
-numpy==1.20.2
-dataclasses==0.6
+scipy>=1.6.2
+bidict>=0.21.2
+numpy>=1.21
+dataclasses>=0.6
 git+https://github.com/0xnurl/fado-python3@master
