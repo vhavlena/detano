@@ -71,6 +71,9 @@ class AnomMember(anom.AnomDetectBase):
 
         @param window: List of messages to be inspected
         @param compair: Pair of communicating devices
+        @param accelerate: Use acceleration with the given value (if a detection
+            value is below accelerate, the detection analysis terminates without
+            computing all detection values). 
 
         @return List of detection result for each model
         """

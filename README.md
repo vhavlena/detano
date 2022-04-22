@@ -7,26 +7,27 @@ probabilistic automata.
 ### Installation
 
 To run the tools you need to have installed `Python 3.9` or higher with the following packages
-- dataclasses
-- bidict
-- bitarray
-- numpy
-- scipy
-- FAdo for Python 3
+- `dataclasses`
+- `bidict`
+- `bitarray`
+- `numpy`
+- `scipy`
+- `FAdo` for Python 3
 
 These packages you can install using the `pip3` util. Or you can use the
 provided `requirements.txt` file (all dependencies can be installed via `pip3
-install -r requirements.txt`). In order to generate the documentation run
+install -r requirements.txt`). In order to generate the documentation, run
 `doxygen` in the `doc` folder.
 
 ### Tool Support Overview
 
-All tools in the suite works with automata obtained from a list of messages
-(packets) divided into *conversations* (messages that logically belong
+All tools in the suite works with probabilistic automata obtained from a list of
+messages (packets) divided into *conversations* (messages that logically belong
 together). Messages (packets) are assumed to be provided in a csv file (each
 message per line). Files containing message are then input of the tools below.
-Messages are splitted into conversations based on a particular protocol (an
-incomplete parser for IEC 104 is provided).
+The tools also allow to work with conversations given as an input. Currently
+supported protocols are IEC 104 and MMS (if the messages are given as an input,
+only IEC 104 is supported).
 
 
 Tools are located in the directory `src`.
@@ -46,6 +47,9 @@ Supporting rules are placed in directory `units` (run with
   The script takes a .csv file together with the number of the first and the last
   window, and returns parsed conversations belonging to each window.
 
+Program documentation is placed in directory `doc` (to generate the documentation
+  run `doxygen` in `doc` directory).
+
 
 ### Anomaly Detection
 
@@ -61,6 +65,7 @@ can be run as follows:
   * `--atype=pa/pta` learning based on PAs/PTAs (default PA)
   * `--alg=distr/member` anomaly detection based on comparing distributions
     (distr) or single message reasoning (member) (default distr)
+  * `--format=conv/ipfix`	format of input data: conversations (conv) or csv data in ipfix format (ipfix) (default ipfix)
   * `--smoothing` use smoothing (for distr only)
   * `--reduced=val` remove similar automata with the given error upper-bound val
     [0,1] (for distr only)
@@ -109,6 +114,11 @@ Detection results:
 ...
 ```
 
+The *Automata counts* part shows the number of automata models used for each
+communication pair. The *Detection results* part then shows concrete output of
+the detection for each communication pair and each time window in the testing
+traffic (numbered from 0) in the form of `<window>;<detection output>`.
+
 Example of the automata learning:
 
 ```bash
@@ -121,6 +131,11 @@ States 3
 Testing: 0/25233 (missclassified/all)
 Accuracy: 1.0
 ```
+
+The output shows used learning parameters, the number of states of the learned
+DPA and the accuracy. The learning uses first 33 % of the input traffic for
+learning and the rest for accuracy evaluation (this value can be changed
+directly in the file `pa_learning.py`).
 
 
 ### Automata Format
@@ -136,11 +151,13 @@ PAs are specified using a format, which given as follows.
 
 - `src` Source codes of the tool support
 - `doc` Source code documentation
+- `experimental` scripts for evaluation
 
-### Citing
+### Publications
 
-**Efficient Modelling of ICS Communication For Anomaly Detection Using Probabilistic Automata**. Petr Matoušek, Vojtěch Havlena, and Lukáš Holík. In
-*Proceedings of IFIP/IEEE International Symposium on Integrated Network
+The tool suite is based on the following papers:
+
+* **Efficient Modelling of ICS Communication For Anomaly Detection Using Probabilistic Automata**. Petr Matoušek, Vojtěch Havlena, and Lukáš Holík. In *Proceedings of IFIP/IEEE International Symposium on Integrated Network
 Management*. ISBN 978-3-903176-32-4. 2021
 ([pdf](http://dl.ifip.org/db/conf/im/im2021/210993.pdf))
 

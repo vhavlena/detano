@@ -210,6 +210,7 @@ def print_help():
     print("OPT are from the following: ")
     print("\t--atype=pa/pta\t\tlearning based on PAs/PTAs (default PA)")
     print("\t--alg=distr/member\tanomaly detection based on comparing distributions (distr) or single message reasoning (member) (default distr)")
+    print("\t--format=conv/ipfix\tformat of input data: conversations (conv) or csv data in ipfix format (ipfix)")
     print("\t--smoothing\t\tuse smoothing (for distr only)")
     print("\t--reduced=val\t\tremove similar automata with the error upper-bound val [0,1] (for distr only)")
     print("\t--threshold=val\t\tdetect anomalies with a given threshold (for distr only)")

@@ -41,6 +41,7 @@ class DFFA(ffa.FFA):
         @param trans: Transitions of the DFFA
         @param ini: Initial states
         @param fin: Final states
+        @param root: Root state
         """
         super(DFFA, self).__init__(states, trans, ini, fin)
         inits = self._get_inits()

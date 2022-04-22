@@ -78,6 +78,9 @@ class AnomDistrComparison(anom.AnomDetectBase):
 
         @param window: List of messages corresponding to a single window to be checked
         @param compair: Pair of communicating devices
+        @param accelerate: Use acceleration with the given value (if a detection
+            value is below accelerate, the detection analysis terminates without
+            computing all detection values). 
 
         @return List of floats representing distance between golden automata and a window
         """
