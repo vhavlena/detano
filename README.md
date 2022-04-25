@@ -51,11 +51,38 @@ Program documentation is placed in directory `doc` (to generate the documentatio
   run `doxygen` in `doc` directory).
 
 
+### Input Data Format
+
+The list of messages is assumed to be provided in an IPFIX csv file, one message per line with the following columns:
+```
+TimeStamp;Relative Time;srcIP;dstIP;srcPort;dstPort;ipLen;len;fmt;uType;asduType;numix;cot;oa;addr;ioa
+```
+As an example, see files from [Dataset
+repository](https://github.com/matousp/datasets) or the following:
+```
+TimeStamp;Relative Time;srcIP;dstIP;srcPort;dstPort;ipLen;len;fmt;uType;asduType;numix;cot;oa;addr;ioa
+15:03:10.31;0.000000;192.158.2.111;192.158.2.248;55000;2404;58;17;0x00000000;;122;1;13;0;63535;64537
+15:03:10.31;0.000595;192.158.2.248;192.158.2.111;2404;55000;63;19;0x00000000;;120;1;13;0;63535;64537
+```
+
+The list of conversations is assumed to be provided in a csv file, one conversation per line, given as
+```
+Timestamp;Relative Time;Duration;Length;Data
+Key;<src IP>-<dest IP>-<src port>-<dest port>;
+```
+where data is a comma separated sequence of messages. For the case of IEC 104, a message is represented by a pair `<asduType.cot>`, for the case of MMS, a message is represented by a pair `<MMStype.service>`. For instance
+```
+Timestamp;Relative Time;Duration;Length;Data
+Key;192.158.2.100-192.158.2.101-2404-55000;
+13:20:51.45;2.562578489;0.212390052;706;<100.6>,<100.7>,<1.20>,<100.10>
+```
+
+
 ### Anomaly Detection
 
 The anomaly detection approaches implemented within the tool `anomaly_check.py`
 takes as an input a file capturing valid network traffic and a file containing
-traffic to be inspected. Examples of csv input files can be found in [Dataset
+traffic to be inspected. Format of input files is described above. Examples of csv input files can be found in [Dataset
 repository](https://github.com/matousp/datasets). More specifically, detection
 approaches (based on distribution comparison or single conversation reasoning)
 can be run as follows:
