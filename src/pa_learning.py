@@ -27,13 +27,16 @@ import math
 from enum import Enum
 from dataclasses import dataclass
 
+from typing import Tuple, FrozenSet
+
 import learning.fpt as fpt
 import learning.alergia as alergia
 import parser.IEC104_parser as con_par
 import parser.IEC104_conv_parser as iec_prep_par
 
+ComPairType = FrozenSet[Tuple[str,str]]
 rows_filter = ["asduType", "cot"]
-TRAINING = 0.33
+TRAINING = 1.0
 
 """
 Program parameters
@@ -100,6 +103,14 @@ def learn_pa(training):
 
 
 """
+Communication entity string format
+"""
+def ent_format(k: ComPairType) -> str:
+    [(fip, fp), (sip, sp)] = list(k)
+    return "{0}v{1}--{2}v{3}".format(fip, fp, sip, sp)
+
+
+"""
 Function for learning based on prefix trees (PTA)
 """
 def learn_pta(training):
@@ -115,21 +126,21 @@ def learn_pta(training):
 """
 Store automaton into file
 """
-def store_automata(csv_file, fa, alpha, t0):
+def store_automata(csv_file, fa, alpha, t0, par=""):
     store_filename = os.path.splitext(os.path.basename(csv_file))[0]
     if (alpha is not None) and (t0 is not None):
-        store_filename = "{0}a{1}t{2}".format(store_filename, alpha, t0)
+        store_filename = "{0}a{1}t{2}{3}".format(store_filename, alpha, t0, par)
     else:
-        store_filename = "{0}-pta".format(store_filename)
+        store_filename = "{0}{1}-pta".format(store_filename,par)
 
     fa_fd = open("{0}.fa".format(store_filename), "w")
     fa_fd.write(fa.to_fa_format(True))
     fa_fd.close()
 
     if (alpha is not None) and (t0 is not None):
-        legend = "File: {0}, alpha: {1}, t0: {2}".format(csv_file, alpha, t0)
+        legend = "File: {0}, alpha: {1}, t0: {2}, {3}".format(csv_file, alpha, t0, par)
     else:
-        legend = "File: {0}".format(csv_file)
+        legend = "File: {0}, {1}".format(csv_file, par)
     dot_fd = open("{0}.dot".format(store_filename), "w")
     dot_fd.write(fa.to_dot(aggregate=False, legend=legend))
     dot_fd.close()
@@ -194,36 +205,39 @@ def main():
             parser = con_par.IEC104Parser(normal_msgs)
         elif params.file_format == InputFormat.CONV:
             parser = iec_prep_par.IEC104ConvParser(normal_msgs)
-        parser.parse_conversations()
     except KeyError as e:
         sys.stderr.write("Missing column in the input csv: {0}\n".format(e))
         sys.exit(1)
 
-    lines = parser.get_all_conversations(abstraction)
-    index = int(len(lines)*TRAINING)
-    training, testing = lines[:index], lines[index:]
+    for compr_parser in parser.split_communication_pairs():
+        compr_parser.parse_conversations()
 
-    try:
-        fa, alpha, t0 = learn_fnc(training)
-    except Exception as e:
-        sys.stderr.write("Learning error: {0}\n".format(e))
-        sys.exit(1)
+        lines = compr_parser.get_all_conversations(abstraction)
+        index = int(len(lines)*TRAINING)
+        training, testing = lines[:index], lines[index:]
 
-    store_automata(csv_file, fa, alpha, t0)
+        try:
+            fa, alpha, t0 = learn_fnc(training)
+        except Exception as e:
+            sys.stderr.write("Learning error {0}: {1}\n".format(csv_file, e))
+            sys.exit(1)
 
-    miss = 0
-    for line in testing:
-        prob = fa.string_prob_deterministic(line)
-        if prob is None:
-            miss += 1
+        par = ent_format(compr_parser.compair)
+        store_automata(csv_file, fa, alpha, t0, par)
 
-    print("File: {0}".format(csv_file))
-    if (alpha is not None) and (t0 is not None):
-        print("alpha: {0}, t0: {1}".format(alpha, t0))
-    print("States {0}".format(len(fa.get_states())))
-    print("Testing: {0}/{1} (missclassified/all)".format(miss, len(testing)))
-    if len(testing) > 0:
-        print("Accuracy: {0}".format((len(testing)-miss)/float(len(testing))))
+        miss = 0
+        for line in testing:
+            prob = fa.string_prob_deterministic(line)
+            if prob is None:
+                miss += 1
+        
+        print("File: {0} {1}".format(csv_file, ent_format(compr_parser.compair)))
+        if (alpha is not None) and (t0 is not None):
+            print("alpha: {0}, t0: {1}".format(alpha, t0))
+        print("States {0}".format(len(fa.get_states())))
+        print("Testing: {0}/{1} (missclassified/all)".format(miss, len(testing)))
+        if len(testing) > 0:
+            print("Accuracy: {0}".format((len(testing)-miss)/float(len(testing))))
 
 
 if __name__ == "__main__":
