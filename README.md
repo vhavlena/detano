@@ -184,6 +184,7 @@ PAs are specified using a format, which given as follows.
 
 The tool suite is based on the following papers:
 
+* **Accurate Automata-Based Detection of Cyber Threats in Smart Grid Communication**. Vojtěch Havlena, Petr Matoušek, Ondřej Ryšavý, and Lukáš Holík. *IEEE Transactions on Smart Grid* IEEE. 2022 ([url](https://ieeexplore.ieee.org/document/9927376))
 * **Efficient Modelling of ICS Communication For Anomaly Detection Using Probabilistic Automata**. Petr Matoušek, Vojtěch Havlena, and Lukáš Holík. In *Proceedings of IFIP/IEEE International Symposium on Integrated Network
 Management*. ISBN 978-3-903176-32-4. 2021
 ([pdf](http://dl.ifip.org/db/conf/im/im2021/210993.pdf))
