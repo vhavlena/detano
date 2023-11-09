@@ -244,10 +244,15 @@ class FFA:
 
         @return Set of reachable states
         """
-        new_set = self.successors_set(st_set)
-        if new_set <= st_set:
-            return st_set
-        return self.reachable_states(new_set | st_set)
+
+        succ: Set[StateType] = st_set
+        head: Set[StateType] = st_set
+        
+        while len(head) > 0:
+            new_set = self.successors_set(head)
+            head = new_set - succ
+            succ = succ | new_set
+        return succ
 
 
     def merge_states(self, states: Set[StateType]) -> None:
